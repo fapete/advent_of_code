@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::io::prelude::*;
+use day2::aoclib::*;
 
 fn main() {
     let input = read_file("./input").unwrap();
@@ -51,11 +50,4 @@ impl Policy {
         (chars[self.min as usize] == self.c && chars[self.max as usize] != self.c)
             || (chars[self.min as usize] != self.c && chars[self.max as usize] == self.c)
     }
-}
-
-fn read_file(fname: &str) -> std::io::Result<String> {
-    let mut file = File::open(fname)?;
-    let mut content = String::new();
-    file.read_to_string(&mut content)?;
-    return Ok(content);
 }
