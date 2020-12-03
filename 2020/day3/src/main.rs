@@ -12,26 +12,20 @@ struct Grid {
 
 impl Grid {
     fn from(grid_desc: String) -> Grid {
-        let mut grid = Vec::new();
-
-        for line in grid_desc.lines() {
-            grid.push(Vec::new());
-            for c in line.chars() {
-                grid.last_mut().unwrap().push(c == '#');
-            }
+        Grid {
+            grid: grid_desc
+                .lines()
+                .map(|line| line.chars().map(|c| c == '#').collect())
+                .collect(),
         }
-
-        Grid { grid }
     }
 
-    fn num_trees_from(&self, slope_r: u64, slope_d: usize) -> u64 {
-        let height = self.grid.len();
-        let width = self.grid[0].len();
+    fn num_trees_from(&self, slope_r: usize, slope_d: usize) -> u64 {
         let mut treecount = 0;
         let mut col = 0;
 
-        for i in (slope_d..height).step_by(slope_d) {
-            col = (col + slope_r as usize) % width;
+        for i in (slope_d..self.grid.len()).step_by(slope_d) {
+            col = (col + slope_r) % self.grid[0].len();
             treecount += if self.grid[i][col] { 1 } else { 0 };
         }
         treecount
