@@ -16,12 +16,8 @@ fn solve2(in_file: &str) -> i64 {
     let mut flip_pos = 0;
     loop {
         flip_pos = computer.flip_next_from(flip_pos) + 1;
-        //eprintln!("Flipped at: {}", flip_pos - 1);
-        //eprintln!("Computer: {:?}", computer);
 
         while let State::Running = computer.step() {}
-
-        //eprintln!("Computer: {:?}", computer);
 
         if computer.has_terminated() {
             break computer.get_acc();
