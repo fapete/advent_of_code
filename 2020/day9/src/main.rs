@@ -38,7 +38,6 @@ impl Slider {
             for i in 0..self.numbers.len() - self.window_size {
                 self.sums_from[i] += self.numbers[i + self.window_size];
                 if self.sums_from[i] == target {
-                    eprintln!("{:?}", &self.numbers[i..i + self.window_size + 1]);
                     return find_min_max(&self.numbers[i..i + self.window_size + 1]);
                 }
             }
