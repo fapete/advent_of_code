@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use day19::aoclib::*;
 
@@ -58,42 +58,63 @@ impl Grammar {
     }
 
     fn cyk(&self, i: &str, s: u64) -> bool {
-        let mut derivable_from: Vec<Vec<Vec<bool>>> = Vec::new();
-        derivable_from.resize(i.len(), Vec::new());
-        for v in derivable_from.iter_mut() {
-            v.resize(i.len(), Vec::with_capacity(self.p.keys().count()));
-            for v1 in v.iter_mut() {
-                v1.resize(self.p.keys().count(), false);
-            }
-        }
+        let mut derivable_from: HashMap<(usize, usize), HashSet<u64>> = HashMap::new();
+        let n = i.len();
 
-        for s in 0..i.len() {
-            let a_s: char = i.chars().skip(s).next().unwrap();
+        for s in 1..n + 1 {
+            let a_s: char = i.chars().skip(s - 1).next().unwrap();
             for (v, rhs) in self
                 .p
                 .iter()
                 .filter(|(_, r)| r.iter().all(|x| is_terminal(&x.symbols)))
             {
-                if rhs[0].symbols[0].get_t_val().unwrap() == a_s {
-                    derivable_from[0][s][*v as usize] = true;
+                for rule in rhs {
+                    if rule.symbols[0].get_t_val().unwrap() == a_s {
+                        derivable_from
+                            .entry((1, s))
+                            .and_modify(|x| {
+                                x.insert(*v);
+                            })
+                            .or_insert_with(|| {
+                                let mut h = HashSet::new();
+                                h.insert(*v);
+                                h
+                            });
+                    }
                 }
             }
         }
 
-        for l in 1..i.len() {
-            for s in 0..i.len() - l {
-                for p in 0..l {
+        for l in 2..n + 1 {
+            for s in 1..(n + 1) - l + 1 {
+                for p in 1..l {
                     for (a, rhs) in self
                         .p
                         .iter()
                         .filter(|(_, r)| r.iter().all(|x| !is_terminal(&x.symbols)))
                     {
                         for rule in rhs {
-                            let b = rule.symbols[0].get_nt_val().unwrap() as usize;
-                            let c = rule.symbols[1].get_nt_val().unwrap() as usize;
-                            if derivable_from[p][s][b] && derivable_from[l - (p + 1)][s + p + 1][c]
+                            let b = rule.symbols[0].get_nt_val().unwrap();
+                            let c = rule.symbols[1].get_nt_val().unwrap();
+                            if derivable_from
+                                .get(&(p, s))
+                                .unwrap_or(&HashSet::new())
+                                .contains(&b)
+                                && derivable_from
+                                    .get(&(l - p, s + p))
+                                    .unwrap_or(&HashSet::new())
+                                    .contains(&c)
                             {
-                                derivable_from[l][s][*a as usize] = true;
+                                derivable_from
+                                    .entry((l, s))
+                                    .and_modify(|x| {
+                                        x.insert(*a);
+                                    })
+                                    .or_insert_with(|| {
+                                        let mut h = HashSet::new();
+                                        h.insert(*a);
+                                        h
+                                    });
                             }
                         }
                     }
@@ -101,7 +122,16 @@ impl Grammar {
             }
         }
         //eprintln!("Final for {}: {:?}", i, derivable_from);
-        derivable_from[i.len() - 1][0][s as usize]
+        derivable_from
+            .get(&(n, 1))
+            .unwrap_or(&HashSet::new())
+            .contains(&s)
+    }
+
+    fn print(&self) {
+        for (l, rhs) in self.p.iter() {
+            eprintln!("{} -> {:?}", l, rhs);
+        }
     }
 }
 
@@ -117,6 +147,8 @@ fn solve1(fname: &str) -> u64 {
     let mut lines = input.lines();
     let mut grammar = parse_grammer_from_input(&mut lines);
     grammar.normalize();
+
+    grammar.print();
 
     let mut c = 0;
     for m in lines.filter(|x| grammar.cyk(*x, 0)) {
@@ -185,4 +217,7 @@ fn test_solve1() {
     assert_eq!(solve1("test"), 2);
     assert_eq!(solve1("test3"), 8);
     assert_eq!(solve1("test4"), 2);
+    assert_eq!(solve1("test5"), 3);
+    assert_eq!(solve1("test7"), 4);
+    assert_eq!(solve1("test6"), 12);
 }
