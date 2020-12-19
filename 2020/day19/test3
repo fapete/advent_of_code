@@ -1,0 +1,19 @@
+7: 1 5
+0: 4 7
+1: 6
+6: 2 3 | 3 2
+8: 4 4
+9: 5 5
+2: 8 | 9
+3: 4 5 | 5 4
+4: "a"
+5: "b"
+
+aaaabb
+aaabab
+abbabb
+abbbab
+aabaab
+aabbbb
+abaaab
+ababbb
