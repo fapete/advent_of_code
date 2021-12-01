@@ -23,3 +23,5 @@
 
 # Personalized puzzle input files
 **/input
+
+**/.DS_Store
