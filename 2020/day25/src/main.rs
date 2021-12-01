@@ -22,32 +22,9 @@ fn brute_force_attack(target_key: u128) -> u128 {
     let mut loop_size = 1;
     while transform_subject_no(7, loop_size) != target_key {
         loop_size += 1;
-        if loop_size % 1000 == 0 {
-            println!("{}", loop_size);
-        }
     }
     loop_size
 }
-
-/*
-std::optional<std::uint32_t> babystep_giantstep(std::uint32_t g, std::uint32_t h, std::uint32_t mod) {
-    const auto m = static_cast<std::uint32_t>(std::ceil(std::sqrt(mod)));
-    auto table = std::unordered_map<std::uint32_t, std::uint32_t>{};
-    auto e = std::uint64_t{1}; // temporary values may be bigger than 32 bit
-    for (auto i = std::uint32_t{0}; i < m; ++i) {
-            table[static_cast<std::uint32_t>(e)] = i;
-            e = (e * g) % mod;
-    }
-    const auto factor = pow_m(g, mod-m-1, mod);
-    e = h;
-    for (auto i = std::uint32_t{}; i < m; ++i) {
-            if (auto it = table.find(static_cast<std::uint32_t>(e)); it != table.end()) {
-                    return {i*m + it->second};
-            }
-            e = (e * factor) % mod;
-    }
-    return std::nullopt;
-} */
 
 fn baby_step_giant_step(g: u128, target: u128) -> Option<u128> {
     let m = (20201227f64).sqrt().ceil() as u128;
