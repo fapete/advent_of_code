@@ -4,9 +4,9 @@ main = do
     args <- getArgs
     let filename = head args
     p1Solution <- solve part1 filename
-   -- p2Solution <- solve part2 filename
+    p2Solution <- solve part2 filename
     putStrLn ("Part 1: " ++ show p1Solution)
-   -- putStrLn ("Part 2: " ++ show p2Solution)
+    putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn filename = do
     input <- getInput filename
@@ -27,10 +27,18 @@ parseInputLine line = case head parts of
 
 part1 commands = finalPosition (moveSub commands (0,0))
 
+part2 commands = finalPosition (pos, depth)
+    where (pos, depth, _) = moveSub' commands (0,0,0)
+
 finalPosition (pos, depth) = pos * depth
 
 moveSub commands state = foldl (flip moveSubStep) state commands
+moveSub' commands state = foldl (flip moveSubStep') state commands
 
 moveSubStep (F i) (pos, depth) = (pos + i, depth)
 moveSubStep (U i) (pos, depth) = (pos, depth - i)
 moveSubStep (D i) (pos, depth) = (pos, depth + i)
+
+moveSubStep' (F i) (pos, depth, aim) = (pos + i, depth + i * aim, aim)
+moveSubStep' (U i) (pos, depth, aim) = (pos, depth, aim - i)
+moveSubStep' (D i) (pos, depth, aim) = (pos, depth, aim + i)
