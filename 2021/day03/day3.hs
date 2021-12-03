@@ -30,8 +30,8 @@ complement = map (\x -> if x == '0' then '1' else '0')
 countOnesPerCol binNums = foldl (zipWith (+)) [0,0..] (map (map digitToInt) binNums)
 
 part2 nums = parseBinary oxygen * parseBinary co2Scrubber
-    where oxygen = getRating oxygenFilter nums 0
-          co2Scrubber = getRating co2Filter nums 0
+    where oxygen = getRating oxygenFilter nums
+          co2Scrubber = getRating co2Filter nums
 
 nxor x y = x && y || not x && not y
 
@@ -43,5 +43,4 @@ co2Filter binNums col = filter (\num -> (num!!col == '0') `nxor` (oneCount >= ze
     where oneCount = countOnesPerCol binNums !! col
           zeroCount = length binNums - oneCount
 
-getRating _ [resultNum] _ = resultNum
-getRating filterBy binNums col = getRating filterBy (filterBy binNums col) (col+1)
+getRating filterBy binNums = head $ head $ dropWhile (\xs -> length xs /= 1) (scanl filterBy binNums [0..])
