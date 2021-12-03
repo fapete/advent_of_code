@@ -23,7 +23,7 @@ part1 nums = parseBinary g * parseBinary e
 
 binGamma binNums = map (\onesInCol -> if onesInCol > length binNums `div` 2 then '1' else '0') $ countOnesPerCol binNums
 
-parseBinary s = foldl (\acc (i, n) -> digitToInt i * 2^n + acc) 0 (zip s [length s - 1, length s - 2..0])
+parseBinary = foldl (\acc i -> acc * 2 + digitToInt i) 0
 
 complement = map (\x -> if x == '0' then '1' else '0')
 
