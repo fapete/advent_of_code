@@ -6,10 +6,9 @@ main = do
   args <- getArgs
   let filename = head args
   p1Solution <- solve part1 filename
-  --p2Solution <- solve part2 filename
+  p2Solution <- solve part2 filename
   putStrLn ("Part 1: " ++ show p1Solution)
-
---putStrLn ("Part 2: " ++ show p2Solution)
+  putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn filename = do
   input <- getInput filename
@@ -44,6 +43,13 @@ part1 parsedInput = part1' parsedInput 0
 part1' (drawnNums, boards) prevCall
   | hasWin boards = sumUnmarked (getWinningBoard boards) * prevCall
   | otherwise = part1' (tail drawnNums, markBoards (head drawnNums) boards) (head drawnNums)
+
+part2 parsedInput = part2' parsedInput 0
+
+part2' (drawnNums, [finalBoard]) prevCall
+  | isWinning finalBoard = sumUnmarked finalBoard * prevCall
+  | otherwise = part2' (tail drawnNums, markBoards (head drawnNums) [finalBoard]) (head drawnNums)
+part2' (drawnNums, boards) prevCall = part2' (tail drawnNums, filter (not . isWinning) (markBoards (head drawnNums) boards)) (head drawnNums)
 
 sumUnmarked :: Board -> Int
 sumUnmarked (Board xs) = sum $ map fst $ filter (not . snd) xs
