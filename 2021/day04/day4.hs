@@ -1,6 +1,5 @@
 import Data.Char
 import System.Environment
-import Text.XHtml (cols)
 
 main = do
   args <- getArgs
