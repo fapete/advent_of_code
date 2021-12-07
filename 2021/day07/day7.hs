@@ -8,9 +8,9 @@ main = do
     args <- getArgs
     let filename = head args
     p1Solution <- solve part1 filename
-    --p2Solution <- solve part2 filename
+    p2Solution <- solve part2 filename
     putStrLn ("Part 1: " ++ show p1Solution)
-    --putStrLn ("Part 2: " ++ show p2Solution)
+    putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn filename = do
     input <- getInput filename
@@ -34,3 +34,10 @@ part1 input = sum $ map (distance midPoint) input
     where midPoint = input !! (length input `div` 2)
 
 distance x y = abs (x - y)
+
+part2 input = minimum $ map (sum . \midPoint -> map (cumulativeDistance midPoint) input) [minCrab .. maxCrab]
+    where minCrab = head input
+          maxCrab = last input
+
+cumulativeDistance x y = n*(n+1) `div` 2
+    where n = distance x y
