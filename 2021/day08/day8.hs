@@ -46,7 +46,7 @@ canonicalWires = Map.fromList [
     ("bcdf", "4"),
     ("abdfg", "5"),
     ("abdefg", "6"),
-    ("adf", "7"),
+    ("acf", "7"),
     ("abcdefg", "8"),
     ("abcdfg", "9")
     ]
@@ -57,11 +57,40 @@ unsafeMaybe Nothing = error "Tried to unpack Nothing"
 decode :: Map.Map Char String -> [String] -> Int
 decode dict = read . foldl1 (++) . map (decodeSingle dict)
 
-decodeSingle dict = unsafeMaybe 
+decodeSingle dict = unsafeMaybe
     . (`Map.lookup` canonicalWires)
     . sort
     . foldl1 (++)
     . map (unsafeMaybe . flip Map.lookup dict)
 
-makeDict :: [String] -> Map.Map Char [Char]
-makeDict xs = Map.empty
+makeDict :: [String] -> Map.Map Char String
+makeDict xs = Map.fromList [
+    (head segmentA, "a"),
+    (head segmentB, "b"),
+    (head segmentC, "c"),
+    (head segmentD, "d"),
+    (head segmentE, "e"),
+    (head segmentF, "f"),
+    (head segmentG, "g")
+    ]
+    where
+        one = head $ filter ((== 2) . length) xs
+        four = head $ filter ((== 4) . length) xs
+        seven = head $ filter ((== 3) . length) xs
+        eight = head $ filter ((== 7) . length) xs
+        segmentA = codeMinus seven one
+        segmentG = head $ filter ((== 1) . length) $ map (`codeMinus` codePlus four seven) $ filter ((== 6) . length) xs
+        nine = codePlus four $ codePlus seven segmentG
+        segmentE = codeMinus eight nine
+        segmentF = head $ filter ((== 1) . length) $ map (`codeMinus` codePlus (codeMinus (codePlus four seven) one) segmentG ) $ filter ((== 5) . length) xs
+        five = codePlus (codeMinus (codePlus four seven) one) (codePlus segmentG segmentF)
+        segmentB = head $ filter ((== 1) . length) $ map (`codeMinus` codePlus (codePlus (codeMinus eight five) seven) segmentG ) $ filter ((== 6) . length) xs
+        zero = codePlus (codeMinus eight five) (codePlus seven (codePlus segmentG segmentB))
+        segmentD = codeMinus four zero
+        six = codePlus five segmentE
+        segmentC = codeMinus eight six
+
+
+
+codeMinus x y = Set.elems $ Set.difference (Set.fromList x) (Set.fromList y)
+codePlus x y = Set.elems $ Set.union (Set.fromList x) (Set.fromList y)
