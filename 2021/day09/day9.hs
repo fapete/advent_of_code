@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 import System.Environment
 import Data.Char
 import Data.List (sort)
