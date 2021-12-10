@@ -17,23 +17,7 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-getInput = fmap lines . readFile
-
--- Solution Logic
-
-part1 = sum . mapMaybe applyScore . mapMaybe extractCorrupt
-
-part2 = (\xs -> xs!!(length xs `div` 2)) . sort . mapMaybe (applyScore2 0) . mapMaybe extractIncomplete
-
-extractCorrupt :: String -> Maybe Char
-extractCorrupt s = case parse s [] of
-    (c:s, _) -> Just c
-    _ -> Nothing
-
-extractIncomplete :: String -> Maybe [Char]
-extractIncomplete s = case parse s [] of
-    ("", stack) -> Just stack
-    _ -> Nothing
+getInput = fmap (map (`parse` []) . lines) . readFile
 
 parse (c:s) stack
     | isOpening c = parse s (c:stack)
@@ -50,6 +34,16 @@ matches o c
     | o == '{' = c == '}'
     | o == '<' = c == '>'
     | otherwise = error $ "First parameter " ++ [c] ++ " is not opening"
+
+-- Solution Logic
+
+part1 = sum . mapMaybe applyScore . extractCorrupt
+
+part2 = (\xs -> xs!!(length xs `div` 2)) . sort . mapMaybe (applyScore2 0) . extractIncomplete
+
+extractCorrupt = map (head . fst) . filter ((/= "") . fst)
+
+extractIncomplete = map snd . filter ((== "") . fst)
 
 applyScore :: Char -> Maybe Int
 applyScore ')' = Just 3
