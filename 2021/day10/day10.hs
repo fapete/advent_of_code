@@ -13,15 +13,11 @@ main = do
     putStrLn ("Part 1: " ++ show p1Solution)
     putStrLn ("Part 2: " ++ show p2Solution)
 
-solve fn filename = do
-    input <- getInput filename
-    return (fn input)
+solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-getInput filename = do
-    x <- readFile filename
-    return $ lines x
+getInput = fmap lines . readFile
 
 -- Solution Logic
 
