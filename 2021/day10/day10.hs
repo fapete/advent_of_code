@@ -9,9 +9,9 @@ main = do
     args <- getArgs
     let filename = head args
     p1Solution <- solve part1 filename
-    --p2Solution <- solve part2 filename
+    p2Solution <- solve part2 filename
     putStrLn ("Part 1: " ++ show p1Solution)
-    --putStrLn ("Part 2: " ++ show p2Solution)
+    putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn filename = do
     input <- getInput filename
@@ -27,9 +27,16 @@ getInput filename = do
 
 part1 = sum . mapMaybe applyScore . mapMaybe extractCorrupt
 
+part2 = (\xs -> xs!!(length xs `div` 2)) . sort . mapMaybe (applyScore2 0) . mapMaybe extractIncomplete
+
 extractCorrupt :: String -> Maybe Char
 extractCorrupt s = case parse s [] of
     (c:s, _) -> Just c
+    _ -> Nothing
+
+extractIncomplete :: String -> Maybe [Char]
+extractIncomplete s = case parse s [] of
+    ("", stack) -> Just stack
     _ -> Nothing
 
 parse (c:s) stack
@@ -54,3 +61,11 @@ applyScore ']' = Just 57
 applyScore '}' = Just 1197
 applyScore '>' = Just 25137
 applyScore _ = Nothing
+
+applyScore2 :: Int -> [Char] -> Maybe Int
+applyScore2 i ('(':s) = applyScore2 (i*5+1) s
+applyScore2 i ('[':s) = applyScore2 (i*5+2) s
+applyScore2 i ('{':s) = applyScore2 (i*5+3) s
+applyScore2 i ('<':s) = applyScore2 (i*5+4) s
+applyScore2 i "" = Just i
+applyScore2 i _ = Nothing
