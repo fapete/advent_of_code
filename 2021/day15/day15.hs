@@ -3,6 +3,7 @@ import Data.List (minimumBy)
 import Data.Bifunctor (bimap)
 import qualified Data.Set as Set
 import qualified Data.Map as Map
+import qualified Data.Heap as Heap
 
 -- IO Scaffolding
 
@@ -30,9 +31,9 @@ extendGridHor = map extendRow
 
 extendGridVert grid = foldl (\acc by -> acc ++ [map (stupidMod by) row | row <- grid]) grid [1,2,3,4]
 
-extendRow row = foldl (\acc by -> acc ++ map (`stupidMod` by) row) row [1,2,3,4]
+extendRow row = foldl (\acc by -> acc ++ map (stupidMod by) row) row [1,2,3,4]
 
--- Works only because we're never adding more than 4, so always (x+y) < 14
+-- Works only because we're never adding more than 4, s always (x+y) < 14
 stupidMod x y = if x+y > 9 then x + y - 9 else x + y
 
 -- Solution Logic
@@ -51,7 +52,7 @@ isIn grid x y = x >= 0 && x < fst (dim grid) && y >= 0 && y < snd (dim grid)
 dijkstra :: Grid -> Map.Map Point (Int, Point) -> Map.Map Point (Int, Point) -> Map.Map Point (Int, Point)
 dijkstra grid done todo = if null todo then done else dijkstra grid done' todo''
     where
-        (nextPoint@(x,y), (weight, prev)) = minimumBy (\x y -> compare (fst $ snd x) (fst $ snd y)) $ Map.assocs todo
+        (nextPoint@(x,y), (weight, prev)) = (minimumBy (\x y -> compare (fst $ snd x) (fst $ snd y)) . Map.assocs) todo
         todo' = Map.delete nextPoint todo
         done' = Map.insert nextPoint (weight, prev) done
         adjacentPoints = filter (`Map.notMember` done') $ getAdjacent grid x y
