@@ -1,6 +1,7 @@
 import qualified Data.Bifunctor as Bifunctor
 import Data.List
 import qualified Data.Matrix as Matrix
+import qualified Data.Set as Set
 import System.Environment
 
 -- IO Scaffolding
@@ -61,27 +62,27 @@ rotationAngles =
   [ (0, 0, 0),
     (pi / 2, 0, 0),
     (pi, 0, 0),
-    (2 * pi / 2, 0, 0),
+    (3 * pi / 2, 0, 0),
     (0, 0, pi / 2),
     (0, pi / 2, pi / 2),
     (0, pi, pi / 2),
-    (0, 2 * pi / 2, pi / 2),
+    (0, 3 * pi / 2, pi / 2),
     (0, 0, pi),
     (pi / 2, 0, pi),
     (pi, 0, pi),
-    (2 * pi / 2, 0, pi),
-    (0, 0, 2 * pi / 2),
-    (0, pi / 2, 2 * pi / 2),
-    (0, pi, 2 * pi / 2),
-    (0, 2 * pi / 2, 2 * pi / 2),
+    (3 * pi / 2, 0, pi),
+    (0, 0, 3 * pi / 2),
+    (0, pi / 2, 3 * pi / 2),
+    (0, pi, 3 * pi / 2),
+    (0, 3 * pi / 2, 3 * pi / 2),
     (0, pi / 2, 0),
     (0, pi / 2, pi / 2),
     (0, pi / 2, pi),
-    (0, pi / 2, 2 * pi / 2),
-    (0, 2 * pi / 2, 0),
-    (0, 2 * pi / 2, pi / 2),
-    (0, 2 * pi / 2, pi),
-    (0, 2 * pi / 2, 2 * pi / 2)
+    (0, pi / 2, 3 * pi / 2),
+    (0, 3 * pi / 2, 0),
+    (0, 3 * pi / 2, pi / 2),
+    (0, 3 * pi / 2, pi),
+    (0, 3 * pi / 2, 3 * pi / 2)
   ]
 
 allRotations ps = [(map (`rotate` r) ps, r) | r <- rotationAngles]
@@ -90,8 +91,23 @@ dist (x1, y1, z1) (x2, y2, z2) = (x1 - x2, y1 - y2, z1 - z2)
 
 dists s0 s1 = [dist p0 p1 | p0 <- s0, p1 <- s1]
 
-intersects s0 s1 = filter ((>= 12) . fst) $ map (Bifunctor.first (maximum . map length . group . sort . dists s0)) (allRotations s1)
+intersects s0 s1 =
+  filter ((>= 12) . fst) $
+    map (Bifunctor.first (maximum . map length . group . sort . dists s0)) (allRotations s1)
 
-allIntersections xs = map (Bifunctor.first (head . map snd)) $ filter (not . null . fst) $ [(intersects (xs !! x) (xs !! y), (x, y)) | x <- [0 .. length xs -1], y <- [(x + 1) .. length xs -1]]
+findBeacons beacons [] = beacons
+findBeacons beacons scanners = findBeacons newBeacons newScanners
+  where
+    (rotation, overlapIdx) =
+      Bifunctor.first (snd . head) $
+        head $
+          dropWhile (null . fst) $
+            [(Bifunctor.first $ intersects (Set.toList beacons)) (scanners !! i, i) | i <- [0 .. length scanners - 1]]
+    rotatedBeacons = map (`rotate` rotation) (scanners !! overlapIdx)
+    (bx, by, bz) = head $ head $ filter ((>= 12) . length) $ group $ sort $ dists (Set.toList beacons) rotatedBeacons
+    newBeacons = Set.union beacons $ Set.fromList (map (\(x, y, z) -> (x + bx, y + by, z + bz)) rotatedBeacons)
+    newScanners = slice 0 overlapIdx scanners ++ drop (overlapIdx + 1) scanners
 
-part1 xs = 3
+slice from to xs = take (to - from) $ drop from xs
+
+part1 xs = Set.size $ findBeacons (Set.fromList $ head xs) (tail xs)
