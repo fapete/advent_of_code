@@ -103,9 +103,10 @@ findBeacons beacons scanners = findBeacons newBeacons newScanners
         head $
           dropWhile (null . fst) $
             [(Bifunctor.first $ intersects (Set.toList beacons)) (scanners !! i, i) | i <- [0 .. length scanners - 1]]
-    rotatedBeacons = map (`rotate` rotation) (scanners !! overlapIdx)
-    (bx, by, bz) = head $ head $ filter ((>= 12) . length) $ group $ sort $ dists (Set.toList beacons) rotatedBeacons
-    newBeacons = Set.union beacons $ Set.fromList (map (\(x, y, z) -> (x + bx, y + by, z + bz)) rotatedBeacons)
+    rotatedBeacons = map (`rotate` rotation) (scanners !! overlapIdx) -- Beacons relative to the scanner at overlapIdx, rotated to face the same way as first scanner
+    (bx, by, bz) = head $ head $ filter ((>= 12) . length) $ group $ sort $ dists (Set.toList beacons) rotatedBeacons -- Position of Scanner relative to (0,0,0)
+    movedBeacons = Set.fromList (map (\(x, y, z) -> (x + bx, y + by, z + bz)) rotatedBeacons) -- new beacons relative to (0,0,0)
+    newBeacons = Set.union beacons movedBeacons
     newScanners = slice 0 overlapIdx scanners ++ drop (overlapIdx + 1) scanners
 
 slice from to xs = take (to - from) $ drop from xs
