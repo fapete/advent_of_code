@@ -89,10 +89,10 @@ iter (p1, p2) (p1Wins, p2Wins)
   | otherwise = (p1Wins, p2Wins)
   where
     (p1', p2') = (oneMoveFromEveryState p1, oneMoveFromEveryState p2)
-    p1NewWins = wins p1' p2'
+    p1NewWins = wins p1' p2
     p2NewWins = wins p2' p1'
     (p1'', p2'') = (filterWinning p1', filterWinning p2')
 
-part2 p1Pos p2Pos = iter (initMap p1Pos p2Pos) (0, 0)
+part2 p1Pos p2Pos = uncurry max $ iter (initMap p1Pos p2Pos) (0, 0)
 
 addTuple x = Bifunctor.bimap (fst x +) (snd x +)
