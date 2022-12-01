@@ -25,3 +25,5 @@
 **/input
 
 **/.DS_Store
+**/*.un~
+**/*.swp
