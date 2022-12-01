@@ -1,5 +1,6 @@
 import System.Environment
 import Data.List
+import Data.List.Split (splitOn)
 
 -- IO Scaffolding
 
@@ -15,15 +16,9 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-getInput = fmap (makeIntegers . split "" . lines) . readFile
+getInput = fmap (makeIntegers . splitOn [""] . lines) . readFile
 
 makeIntegers = map (map read)
-
-split c s = case dropWhile (== c) s of
-  [] -> []
-  s' -> w : split c s''
-    where
-      (w, s'') = break (== c) s'
 
 -- Solution Logic
 

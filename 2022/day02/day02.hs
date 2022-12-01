@@ -1,5 +1,6 @@
 import System.Environment
 import Data.List
+import Data.List.Split (splitOn)
 
 -- IO Scaffolding
 
@@ -19,12 +20,6 @@ getInput = fmap (lines) . readFile
 
 makeIntegers :: [[String]] -> [[Integer]]
 makeIntegers = map (map read)
-
-split c s = case dropWhile (== c) s of
-  [] -> []
-  s' -> w : split c s''
-    where
-      (w, s'') = break (== c) s'
 
 -- Solution Logic
 
