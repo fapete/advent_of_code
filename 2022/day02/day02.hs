@@ -9,11 +9,12 @@ main = do
   args <- getArgs
   let filename = head args
   p1Solution <- solve part1 filename
-  --p2Solution <- solve part2 filename
+  p2Solution <- solve2 part1 filename
   putStrLn ("Part 1: " ++ show p1Solution)
-  --putStrLn ("Part 2: " ++ show p2Solution)
+  putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn = fmap fn . getInput
+solve2 fn = fmap fn . getInput2
 
 -- Input Parsing
 
@@ -31,8 +32,26 @@ parseShape "Y" = Just Paper
 parseShape "Z" = Just Scissors
 parseShape _ = Nothing
 
-makeIntegers :: [[String]] -> [[Integer]]
-makeIntegers = map (map read)
+getInput2 = fmap (map (determineGame . mapMaybe parseInstruction . splitOn " ") . lines) . readFile
+
+parseInstruction "A" = Just (Left Rock)
+parseInstruction "B" = Just (Left Paper)
+parseInstruction "C" = Just (Left Scissors)
+parseInstruction "X" = Just (Right Lose)
+parseInstruction "Y" = Just (Right Draw)
+parseInstruction "Z" = Just (Right Win)
+parseInstruction _ = Nothing
+
+determineGame [Left Rock, Right Lose] = [Just Rock, Just Scissors]
+determineGame [Left Rock, Right Draw] = [Just Rock, Just Rock]
+determineGame [Left Rock, Right Win] = [Just Rock, Just Paper]
+determineGame [Left Paper, Right Lose] =[Just Paper, Just Rock]
+determineGame [Left Paper, Right Draw] =[Just Paper, Just Paper]
+determineGame [Left Paper, Right Win] = [Just Paper, Just Scissors]
+determineGame [Left Scissors, Right Lose] =[Just Scissors, Just Paper]
+determineGame [Left Scissors, Right Draw] =[Just Scissors, Just Scissors]
+determineGame [Left Scissors, Right Win] = [Just Scissors, Just Rock]
+determineGame _ = [Nothing]
 
 -- Solution Logic
 
