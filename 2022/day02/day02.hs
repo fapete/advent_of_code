@@ -1,6 +1,7 @@
 import System.Environment
 import Data.List
 import Data.List.Split (splitOn)
+import Data.Maybe (mapMaybe, catMaybes)
 
 -- IO Scaffolding
 
@@ -16,11 +17,46 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-getInput = fmap (lines) . readFile
+
+data Shape = Rock | Paper | Scissors deriving (Show)
+data Outcome = Win | Draw | Lose deriving (Show)
+
+getInput = fmap (map (map parseShape . splitOn " ") . lines) . readFile
+
+parseShape "A" = parseShape "X"
+parseShape "B" = parseShape "Y"
+parseShape "C" = parseShape "Z"
+parseShape "X" = Just Rock
+parseShape "Y" = Just Paper
+parseShape "Z" = Just Scissors
+parseShape _ = Nothing
 
 makeIntegers :: [[String]] -> [[Integer]]
 makeIntegers = map (map read)
 
 -- Solution Logic
 
-part1 xs = 4
+gameOutcome Rock Paper = Win
+gameOutcome Paper Scissors = Win
+gameOutcome Scissors Rock = Win
+gameOutcome Paper Rock = Lose
+gameOutcome Rock Scissors = Lose
+gameOutcome Scissors Paper = Lose
+gameOutcome Rock Rock = Draw
+gameOutcome Paper Paper = Draw
+gameOutcome Scissors Scissors = Draw
+
+shapeScore Rock = 1
+shapeScore Paper = 2
+shapeScore Scissors = 3
+
+outcomeScore Win = 6
+outcomeScore Draw = 3
+outcomeScore Lose = 0
+
+score playedShape outcome = shapeScore playedShape + outcomeScore outcome
+
+scoreRound [Just p1Shape, Just p2Shape] = Just (score p2Shape $ gameOutcome p1Shape p2Shape)
+scoreRound _ = Nothing
+
+part1 = sum . mapMaybe scoreRound
