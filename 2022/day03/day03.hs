@@ -1,8 +1,5 @@
-import Data.Bifunctor qualified as Bifunctor
 import Data.Char (isUpper, ord)
 import Data.List
-import Data.List.Split (splitOn)
-import Data.Maybe (catMaybes, mapMaybe)
 import System.Environment
 
 -- IO Scaffolding
