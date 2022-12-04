@@ -15,7 +15,7 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-data Interval = Interval Integer Integer deriving (Show, Eq, Ord)
+data Interval = Interval Integer Integer deriving (Show, Eq)
 
 getInput = fmap (map (parseIntervals . myBreak (== ',')) . lines) . readFile
 
