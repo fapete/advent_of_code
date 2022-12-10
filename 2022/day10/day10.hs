@@ -1,4 +1,8 @@
+import Data.Bifunctor (Bifunctor)
+import Data.Bool (bool)
 import Data.List
+import Data.List.Split (chunksOf)
+import Data.Tuple.All (sel2)
 import System.Environment
 
 -- IO Scaffolding
@@ -18,7 +22,6 @@ solve fn = fmap fn . getInput
 
 data Instruction = Add Int | Noop deriving (Show, Read)
 
-getInput :: FilePath -> IO [Instruction]
 getInput = fmap (map (read . parseInstruction) . lines) . readFile
 
 parseInstruction ('a' : 'd' : 'd' : 'x' : xs) = "Add " ++ xs
@@ -27,35 +30,19 @@ parseInstruction _ = error "Invalid instruction"
 
 -- Solution Logic
 
-execute (Add x) register cycle = [(register, cycle + 1, register), (register, cycle + 2, register + x)]
-execute Noop register cycle = [(register, cycle + 1, register)]
+execute (_, cycle, register) (Add x) = [(register, cycle + 1, register), (register, cycle + 2, register + x)]
+execute (_, cycle, register) Noop = [(register, cycle + 1, register)]
 
-relevantCycles = [20, 60 ..]
+relevantCycles = [20, 60 .. 240]
 
-getCycle (_, cycle, _) = cycle
+executeAll = tail . concat . scanl (execute . last) [(1, 0, 1)]
 
-getRegisterAfter (_, _, value) = value
+signalStrengths = map (\(value, cycle, _) -> value * cycle)
 
-executeAll = concat . scanl (\result instruction -> execute instruction (getRegisterAfter $ last result) (getCycle $ last result)) [(1, 0, 1)]
+isPixel (value, cycle, _) = ((cycle - 1) `mod` 40) `elem` [value - 1, value, value + 1]
 
-signalStrengths [] _ = []
-signalStrengths (c : cycles) executionResults = (c * valueDuringCycle) : signalStrengths cycles remainingResults
-  where
-    remainingResults = dropWhile (\(_, cycleAfter, _) -> cycleAfter < c) executionResults
-    (valueDuringCycle, _, _) = head remainingResults
+drawScreen = concatMap (bool "  " "##" . isPixel)
 
-getPixel (value, cycle, _)
-  | ((cycle - 1) `mod` 40) `elem` spritePositions = '#'
-  | otherwise = ' '
-  where
-    spritePositions = [value - 1, value, value + 1]
+part1 = sum . signalStrengths . filter (flip elem relevantCycles . sel2) . executeAll
 
-drawScreen :: [(Int, Int, Int)] -> [Char]
-drawScreen = foldl (\agg executionResult -> agg ++ [getPixel executionResult]) ""
-
-splitIntoLines [] = []
-splitIntoLines line = take 40 line ++ "\n" ++ splitIntoLines (drop 40 line)
-
-part1 = sum . signalStrengths (take 6 relevantCycles) . executeAll
-
-part2 = splitIntoLines . drawScreen . tail . executeAll
+part2 = unlines . chunksOf 80 . drawScreen . executeAll
