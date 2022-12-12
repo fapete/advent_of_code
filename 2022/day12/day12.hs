@@ -61,4 +61,4 @@ findStartingPositions = M.keys . M.filter (== 'a')
 
 part1 grid = bfs (S.singleton (0, getStartPos grid)) S.empty grid
 
-part2 grid = minimum $ filter (>0) $ [bfs (S.singleton (0, x)) S.empty grid | x <- findStartingPositions grid]
+part2 grid = bfs (S.fromList $ map (0,) $ findStartingPositions grid) S.empty grid
