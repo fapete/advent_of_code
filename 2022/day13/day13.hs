@@ -6,7 +6,6 @@ import Data.List.Split (splitOn)
 import Data.Bifunctor (second, bimap)
 import Data.Char (isDigit)
 import Data.Bool (bool)
-import Util (unzipWith)
 import Data.Maybe (fromMaybe)
 
 -- IO Scaffolding
