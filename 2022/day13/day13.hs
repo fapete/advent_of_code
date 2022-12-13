@@ -6,7 +6,7 @@ import Data.List.Split (splitOn)
 import Data.Bifunctor (second, bimap)
 import Data.Char (isDigit)
 import Data.Bool (bool)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (catMaybes)
 
 -- IO Scaffolding
 
@@ -22,7 +22,7 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-data Packet = L [Packet] | I Int deriving (Show, Read, Eq)
+data Packet = L ![Packet] | I !Int deriving (Show, Read, Eq)
 
 getInput :: FilePath -> IO [(Packet, Packet)]
 getInput = fmap (map (bimap (read . insertConstructors) (read . insertConstructors) . splitPackets) . paragraphs) . readFile
@@ -33,38 +33,30 @@ splitPackets = second tail . break (== '\n')
 
 insertConstructors [] = []
 insertConstructors ('[':x:line)
-  | isDigit x = 'L':' ':'[':'I':' ':insertConstructors (x:line)
-  | otherwise = 'L':' ':'[':insertConstructors (x:line)
+  | isDigit x = "L [I " ++ insertConstructors (x:line)
+  | otherwise = "L [" ++ insertConstructors (x:line)
 insertConstructors (',':x:line) 
-  | isDigit x = ',':'I':' ':insertConstructors (x:line)
+  | isDigit x = ",I " ++ insertConstructors (x:line)
   | otherwise = ',':insertConstructors (x:line)
 insertConstructors (x:line) = x:insertConstructors line
 
 -- Solution Logic
 instance Ord Packet where
   compare :: Packet -> Packet -> Ordering
-  compare (L []) (L []) = EQ
-  compare (L []) (L p) = LT
-  compare (L p) (L []) = GT
-  compare (L p) (L p')
-    | head p == head p' = compare (L $ tail p) (L $ tail p')
-    | otherwise = compare (head p) (head p')
-  compare (L p) (I i) = compare (L p) (L [I i])
-  compare (I i) (L p) = compare (L [I i]) (L p) 
+  compare (L p) (L p') = compare p p'
+  compare l@(L _) r@(I _) = compare l (L [r])
+  compare l@(I _) r@(L _) = compare (L [l]) r 
   compare (I i) (I i') = compare i i'
 
 part1 = sum . zipWith (*) [1..] . map (bool 0 1 . uncurry (<))
 
 unsplitPackages = uncurry (++) . unzip
 
-divider1 :: Packet
-divider1 = read $ insertConstructors "[[2]]"
+dividers :: [Packet]
+dividers = map (read . insertConstructors) ["[[2]]", "[[6]]"]
 
-divider2 :: Packet
-divider2 = read $ insertConstructors "[[6]]"
+addDividers = (++) dividers
 
-part2 xs = d1Idx * d2Idx
-  where
-    d1Idx = (+1) $ fromMaybe 0 $ elemIndex divider1 packages
-    d2Idx = (+1) $ fromMaybe 0 $ elemIndex divider2 packages
-    packages = sort $ divider1:divider2:unsplitPackages xs
+findDividers xs = map (fmap (+1) . flip elemIndex xs) dividers
+
+part2 = product . catMaybes . findDividers . sort . addDividers . unsplitPackages
