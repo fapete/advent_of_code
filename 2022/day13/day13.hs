@@ -1,5 +1,12 @@
+{-# LANGUAGE InstanceSigs #-}
 import Data.List
 import System.Environment
+import Data.Text (replace)
+import Data.List.Split (splitOn)
+import Data.Bifunctor (second, bimap)
+import Data.Char (isDigit)
+import Data.Bool (bool)
+import Util (unzipWith)
 
 -- IO Scaffolding
 
@@ -15,7 +22,35 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-getInput = fmap (lines) . readFile
+data Packet = L [Packet] | I Int deriving (Show, Read, Eq)
+
+getInput :: FilePath -> IO [(Packet, Packet)]
+getInput = fmap (map (bimap (read . insertConstructors) (read . insertConstructors) . splitPackets) . paragraphs) . readFile
+
+paragraphs = splitOn "\n\n"
+
+splitPackets = second tail . break (== '\n')
+
+insertConstructors [] = []
+insertConstructors ('[':x:line)
+  | isDigit x = 'L':' ':'[':'I':' ':insertConstructors (x:line)
+  | otherwise = 'L':' ':'[':insertConstructors (x:line)
+insertConstructors (',':x:line) 
+  | isDigit x = ',':'I':' ':insertConstructors (x:line)
+  | otherwise = ',':insertConstructors (x:line)
+insertConstructors (x:line) = x:insertConstructors line
 
 -- Solution Logic
-part1 xs = 4
+instance Ord Packet where
+  compare :: Packet -> Packet -> Ordering
+  compare (L []) (L []) = EQ
+  compare (L []) (L p) = LT
+  compare (L p) (L []) = GT
+  compare (L p) (L p')
+    | head p == head p' = compare (L $ tail p) (L $ tail p')
+    | otherwise = compare (head p) (head p')
+  compare (L p) (I i) = compare (L p) (L [I i])
+  compare (I i) (L p) = compare (L [I i]) (L p) 
+  compare (I i) (I i') = compare i i'
+
+part1 = sum . zipWith (*) [1..] . map (bool 0 1 . uncurry (<))
