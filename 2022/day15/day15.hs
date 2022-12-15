@@ -1,7 +1,10 @@
 import Data.List
 import System.Environment
-import Data.Bifunctor (bimap)
+import Data.Bifunctor (bimap, second)
 import Data.Bool (bool)
+import Data.Maybe (fromJust, fromMaybe)
+import qualified Data.Set as S
+import Data.List.Split (chunksOf)
 
 -- IO Scaffolding
 
@@ -9,10 +12,11 @@ main = do
   args <- getArgs
   let filename = head args
   let lineNum = read $ args !! 1
+  let maxCoord = read $ args !! 2
   p1Solution <- solve (part1 lineNum) filename
-  --p2Solution <- solve part2 filename
+  p2Solution <- solve (part2 maxCoord) filename
   putStrLn ("Part 1: " ++ show p1Solution)
-  --putStrLn ("Part 2: " ++ show p2Solution)
+  putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn = fmap fn . getInput
 
@@ -25,6 +29,8 @@ getInput = fmap (map (uncurry parseSensor . parsePositions) . lines) . readFile
 
 parseSensor sensorPos beaconPos = Sensor sensorPos beaconPos $ manhattan sensorPos beaconPos
 
+manhattan (x,y) (x', y') = abs(x-x') + abs(y-y')
+
 parsePositions = bimap getPos getPos . break (== ':')
 
 getPos :: String -> Pos
@@ -32,19 +38,36 @@ getPos = bimap (read . tail . dropWhile (/= '=')) (read . drop 4) . break (== ',
 
 -- Solution Logic
 
-manhattan (x,y) (x', y') = abs(x-x') + abs(y-y')
+coveredIntervals (Sensor (x,y) _ d) = [(y + d', (x - d + abs d', x + (d - abs d'))) | d' <- [-d..d] ]
 
-isCovered pos (Sensor sensorPos _ coveredDistance) = manhattan pos sensorPos <= coveredDistance
+intervalIntersect (from, to) (from', to') =
+  to >= from' && to <= to' ||
+  from >= from' && from <= to' ||
+  from <= from' && to >= to' ||
+  from' <= from && to' >= to
 
-beaconAt pos (Sensor _ beaconPos _) = pos == beaconPos
+intervalUnion i@(from, to) i'@(from', to')
+  | not $ intervalIntersect i i' = [i,i']
+  | otherwise = [(min from from', max to to')]
 
-coveredMaxDim sensors = (minX - distMax, maxX + distMax)
+reduce intervals
+  | length intervals == length newIntervals = intervals
+  | otherwise = reduce newIntervals
+    where
+      newIntervals = concatMap (uncurry intervalUnion) $ pairs intervals
+
+pairs xs = map (\xs -> (head xs, last xs)) $ chunksOf 2 xs
+
+intervalsOnLine line = concatMap (map snd . filter (\(y, _) -> y == line))
+
+part1 lineNum sensors = abs $ uncurry (-) $ head $ reduce $ sort $ intervalsOnLine lineNum sensorIntervals
   where
-    (Sensor (minX, _) _ _, Sensor (maxX, _) _ _) = (minimum sensors, maximum sensors)
-    distMax = maximum $ map (\(Sensor _ _ d) -> d) sensors
-    
+    sensorIntervals = map coveredIntervals sensors
 
-part1 :: Int -> [Sensor] -> Int
-part1 lineNum sensors = sum $ [(bool 0 1 . \pos -> any (isCovered pos) sensors && not (any (beaconAt pos) sensors) ) (x, lineNum) | x <- [from .. to]]
+part2 maxCoord sensors = (\(y, (_,x)) -> (x+1) * 4000000 + y)
+  $ second head
+  $ fromMaybe (0, [(0,0)])
+  $ find ((== 2) . length . snd)
+  $ map (\line -> (line, reduce $ sort $ intervalsOnLine line sensorIntervals)) [0..maxCoord]
   where
-    (from, to) = coveredMaxDim sensors
+    sensorIntervals = map coveredIntervals sensors
