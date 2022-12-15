@@ -2,7 +2,7 @@ import Data.List
 import System.Environment
 import Data.Bifunctor (bimap, second)
 import Data.Bool (bool)
-import Data.Maybe (fromJust, fromMaybe)
+import Data.Maybe (fromJust, fromMaybe, mapMaybe)
 import qualified Data.Set as S
 import Data.List.Split (chunksOf)
 
@@ -38,36 +38,47 @@ getPos = bimap (read . tail . dropWhile (/= '=')) (read . drop 4) . break (== ',
 
 -- Solution Logic
 
+coveredIntervals :: Sensor -> [(Int, (Int, Int))]
 coveredIntervals (Sensor (x,y) _ d) = [(y + d', (x - d + abs d', x + (d - abs d'))) | d' <- [-d..d] ]
 
+coveredIntervalOnLine line (Sensor (x,y) _ d) 
+  | from <= to = Just (from, to)
+  | otherwise = Nothing
+  where
+    (from, to) = (x - d + distFromCenter, x + (d - distFromCenter))
+    distFromCenter = abs (y - line)
+
+intervalIntersect :: (Int, Int) -> (Int, Int) -> Bool
 intervalIntersect (from, to) (from', to') =
   to >= from' && to <= to' ||
   from >= from' && from <= to' ||
   from <= from' && to >= to' ||
   from' <= from && to' >= to
 
+intervalUnion :: (Int, Int) -> (Int, Int) -> [(Int, Int)]
 intervalUnion i@(from, to) i'@(from', to')
   | not $ intervalIntersect i i' = [i,i']
   | otherwise = [(min from from', max to to')]
 
+reduce :: [(Int, Int)] -> [(Int, Int)]
 reduce intervals
   | length intervals == length newIntervals = intervals
   | otherwise = reduce newIntervals
     where
       newIntervals = concatMap (uncurry intervalUnion) $ pairs intervals
 
+pairs :: [b] -> [(b, b)]
 pairs xs = map (\xs -> (head xs, last xs)) $ chunksOf 2 xs
 
+intervalsOnLine :: Int -> [[(Int, (Int, Int))]] -> [(Int, Int)]
 intervalsOnLine line = concatMap (map snd . filter (\(y, _) -> y == line))
 
-part1 lineNum sensors = abs $ uncurry (-) $ head $ reduce $ sort $ intervalsOnLine lineNum sensorIntervals
-  where
-    sensorIntervals = map coveredIntervals sensors
+part1 :: Int -> [Sensor] -> Int
+part1 lineNum sensors = abs $ uncurry (-) $ head $ reduce $ sort $ mapMaybe (coveredIntervalOnLine lineNum) sensors -- intervalsOnLine lineNum sensorIntervals
 
+part2 :: Int -> [Sensor] -> Int
 part2 maxCoord sensors = (\(y, (_,x)) -> (x+1) * 4000000 + y)
   $ second head
   $ fromMaybe (0, [(0,0)])
   $ find ((== 2) . length . snd)
-  $ map (\line -> (line, reduce $ sort $ intervalsOnLine line sensorIntervals)) [0..maxCoord]
-  where
-    sensorIntervals = map coveredIntervals sensors
+  $ map (\line -> (line, reduce $ sort $ mapMaybe (coveredIntervalOnLine line) sensors)) [0..maxCoord]
