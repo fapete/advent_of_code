@@ -70,9 +70,6 @@ reduce intervals
 pairs :: [b] -> [(b, b)]
 pairs xs = map (\xs -> (head xs, last xs)) $ chunksOf 2 xs
 
-intervalsOnLine :: Int -> [[(Int, (Int, Int))]] -> [(Int, Int)]
-intervalsOnLine line = concatMap (map snd . filter (\(y, _) -> y == line))
-
 part1 :: Int -> [Sensor] -> Int
 part1 lineNum sensors = abs $ uncurry (-) $ head $ reduce $ sort $ mapMaybe (coveredIntervalOnLine lineNum) sensors -- intervalsOnLine lineNum sensorIntervals
 
