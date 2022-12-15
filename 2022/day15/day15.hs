@@ -38,9 +38,6 @@ getPos = bimap (read . tail . dropWhile (/= '=')) (read . drop 4) . break (== ',
 
 -- Solution Logic
 
-coveredIntervals :: Sensor -> [(Int, (Int, Int))]
-coveredIntervals (Sensor (x,y) _ d) = [(y + d', (x - d + abs d', x + (d - abs d'))) | d' <- [-d..d] ]
-
 coveredIntervalOnLine line (Sensor (x,y) _ d) 
   | from <= to = Just (from, to)
   | otherwise = Nothing
@@ -71,7 +68,7 @@ pairs :: [b] -> [(b, b)]
 pairs xs = map (\xs -> (head xs, last xs)) $ chunksOf 2 xs
 
 part1 :: Int -> [Sensor] -> Int
-part1 lineNum sensors = abs $ uncurry (-) $ head $ reduce $ sort $ mapMaybe (coveredIntervalOnLine lineNum) sensors -- intervalsOnLine lineNum sensorIntervals
+part1 lineNum sensors = abs $ uncurry (-) $ head $ reduce $ sort $ mapMaybe (coveredIntervalOnLine lineNum) sensors
 
 part2 :: Int -> [Sensor] -> Int
 part2 maxCoord sensors = (\(y, (_,x)) -> (x+1) * 4000000 + y)
