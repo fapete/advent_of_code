@@ -92,4 +92,3 @@ initialGrid = S.fromList [(i, 0) | i <- [1 .. 7]]
 third (_, _, i) = i
 
 part1 xs = third . foldl (\(grid, commands, newMax) shape -> fromJust $ dropShape shape (3, newMax + 4) newMax grid commands) (initialGrid, cycle xs, 0) $ take 2022 shapes
-
