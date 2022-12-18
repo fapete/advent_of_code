@@ -1,4 +1,6 @@
 import Data.List
+import Data.List.Split (splitOn)
+import Data.Set qualified as S
 import System.Environment
 
 -- IO Scaffolding
@@ -16,8 +18,16 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
-getInput = fmap (lines) . readFile
+type Cube = (Int, Int, Int)
+
+getInput = fmap (S.fromList . map parseCube . lines) . readFile
+
+parseCube = (\xs -> (head xs, xs !! 1, last xs)) . map (\x -> read x :: Int) . splitOn ","
 
 -- Solution Logic
 
-part1 xs = 4
+neighbouring (x, y, z) = [(x + 1, y, z), (x - 1, y, z), (x, y - 1, z), (x, y + 1, z), (x, y, z - 1), (x, y, z + 1)]
+
+freeSides cube cubes = length $ filter (not . flip S.member cubes) $ neighbouring cube
+
+part1 xs = sum $ map (`freeSides` xs) $ S.elems xs
