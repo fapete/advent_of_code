@@ -11,10 +11,9 @@ main = do
   args <- getArgs
   let filename = head args
   p1Solution <- solve part1 filename
-  -- p2Solution <- solve part2 filename
+  p2Solution <- solve part2 filename
   putStrLn ("Part 1: " ++ show p1Solution)
-
--- putStrLn ("Part 2: " ++ show p2Solution)
+  putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn = fmap fn . getInput
 
@@ -121,3 +120,5 @@ minute i max blueprint resources robots
     buildObsidianIfPossible = bool tryBuildingAll buildObsidianOrNothing $ canBuildObsidianBot blueprint resources
 
 part1 xs = sum $ zipWith (\blueprint id -> id * minute 0 24 blueprint (0, 0, 0, 0) (1, 0, 0, 0)) xs [1 ..]
+
+part2 = product . map (\blueprint -> minute 0 32 blueprint (0, 0, 0, 0) (1, 0, 0, 0)) . take 3
