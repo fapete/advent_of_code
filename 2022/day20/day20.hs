@@ -41,10 +41,10 @@ findWithIndexBy' idx f (x:<|xs)
 
 unpackNums = Seq.mapWithIndex (\_ e -> snd e)
 
-turnTo0 seq@((i, num):<|xs)
-  | num == 0 = seq
-  | otherwise = turnTo0 (xs |> (i,num))
-turnTo0 xs = xs
+turnTo0 seq = i >< t
+  where
+    zeroIdx = fromJust $ findIndexL ((==) 0 . snd) seq
+    (t, i) = Seq.splitAt zeroIdx seq
 
 part1 xs = sum [index mixed (1000 `mod` l), index mixed (2000 `mod` l), index mixed (3000 `mod` l)]
   where
