@@ -29,7 +29,6 @@ mix pos until seq
   | otherwise = mix (pos + 1) until $ (before |> element) >< after
   where
     (curIdx, element@(origIdx, num)) = fromJust $ findWithIndexBy ((==) pos . fst) seq
-    turnCW = (\(i, l) -> l >< i) $ Seq.splitAt (Seq.length seq - 1) seq
     newIndex = (curIdx + num) `mod` (Seq.length seq - 1)
     (before, after) = Seq.splitAt newIndex $ Seq.deleteAt curIdx seq
 
