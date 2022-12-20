@@ -2,6 +2,7 @@ import System.Environment
 import Data.Sequence as Seq
 import Data.Bifunctor (second)
 import Data.Bool (bool)
+import Data.Maybe (fromJust)
 
 -- IO Scaffolding
 
@@ -25,15 +26,19 @@ getInput = fmap (fromList . Prelude.zip [0..] . map read . lines) . readFile
 mix :: Int -> Int -> Seq (Int, Int) -> Seq (Int, Int)
 mix pos until seq
   | pos == until = seq
-  | origIdx /= pos = mix pos until turnCW
-  | origIdx == pos = mix (pos + 1) until $ (before |> element) >< after
-  | otherwise = error "impossible state"
+  | otherwise = mix (pos + 1) until $ (before |> element) >< after
   where
-    turnCCW = (\(f, t) -> t >< f) $ Seq.splitAt 1 seq
+    (curIdx, element@(origIdx, num)) = fromJust $ findWithIndexBy ((==) pos . fst) seq
     turnCW = (\(i, l) -> l >< i) $ Seq.splitAt (Seq.length seq - 1) seq
-    element@(origIdx, num) = index seq pos
-    newIndex = (pos + num) `mod` (Seq.length seq - 1)
-    (before, after) = Seq.splitAt newIndex $ Seq.deleteAt pos seq
+    newIndex = (curIdx + num) `mod` (Seq.length seq - 1)
+    (before, after) = Seq.splitAt newIndex $ Seq.deleteAt curIdx seq
+
+findWithIndexBy = findWithIndexBy' 0
+
+findWithIndexBy' _ _ Seq.Empty = Nothing
+findWithIndexBy' idx f (x:<|xs)
+  | f x = Just (idx, x)
+  | otherwise = findWithIndexBy' (idx+1) f xs
 
 unpackNums = Seq.mapWithIndex (\_ e -> snd e)
 
