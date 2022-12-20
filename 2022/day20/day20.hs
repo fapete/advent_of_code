@@ -9,9 +9,9 @@ main = do
   args <- getArgs
   let filename = head args
   p1Solution <- solve part1 filename
-  --p2Solution <- solve part2 filename
+  p2Solution <- solve part2 filename
   putStrLn ("Part 1: " ++ show p1Solution)
-  --putStrLn ("Part 2: " ++ show p2Solution)
+  putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn = fmap fn . getInput
 
@@ -46,3 +46,8 @@ part1 xs = sum [index mixed (1000 `mod` l), index mixed (2000 `mod` l), index mi
   where
     l = Seq.length xs
     mixed = unpackNums $ turnTo0 $ mix 0 l xs
+
+part2 xs = sum [index mixed (1000 `mod` l), index mixed (2000 `mod` l), index mixed (3000 `mod` l)]
+  where
+    l = Seq.length xs
+    mixed = unpackNums $ turnTo0 $ foldl (\agg _ -> mix 0 l agg) (mapWithIndex (\_ e -> second (* 811589153) e) xs) [1..10]
