@@ -82,19 +82,19 @@ adjustMonkeys monkeyMap = M.insert "root" (Eq left right) $ M.delete "humn" monk
       (Div n n') -> (n, n')
       other -> error "Invalid"
 
-solveForVar (Num y) (Var _) = Num y
-solveForVar (Num y) (Add op (Num i)) = solveForVar (Num (y-i)) op
-solveForVar (Num y) (Sub op (Num i)) = solveForVar (Num (y+i)) op
-solveForVar (Num y) (Mul op (Num i)) = solveForVar (Num (y `div` i)) op
-solveForVar (Num y) (Div op (Num i)) = solveForVar (Num (y * i)) op
-solveForVar (Num y) (Add (Num i) op) = solveForVar (Num (y - i)) op
-solveForVar (Num y) (Sub (Num i) op) = solveForVar (Num (-y + i)) op
-solveForVar (Num y) (Mul (Num i) op) = solveForVar (Num (y `div` i)) op
-solveForVar (Num y) (Div (Num i) op) = solveForVar (Num (i `div` y)) op
+solveForVar y (Var _) = Num y
+solveForVar y (Add op (Num i)) = solveForVar (y-i) op
+solveForVar y (Sub op (Num i)) = solveForVar (y+i) op
+solveForVar y (Mul op (Num i)) = solveForVar (y `div` i) op
+solveForVar y (Div op (Num i)) = solveForVar (y * i) op
+solveForVar y (Add (Num i) op) = solveForVar (y - i) op
+solveForVar y (Sub (Num i) op) = solveForVar (-y + i) op
+solveForVar y (Mul (Num i) op) = solveForVar (y `div` i) op
+solveForVar y (Div (Num i) op) = solveForVar (i `div` y) op
 solveForVar x y = error $ "solveForVar: invalid input" ++ show x ++ "; " ++ show y
 
-getVal op (Num y) = solveForVar (Num y) op
-getVal (Num y) op = solveForVar (Num y) op
+getVal op (Num y) = solveForVar y op
+getVal (Num y) op = solveForVar y op
 getVal op op' = error $ "getVal: invalid input" ++ show op ++ ", " ++ show op'
 
 part2 monkeys = computeResult $ reduce $ makeParseTree (adjustedMonkeys M.! "root") adjustedMonkeys
