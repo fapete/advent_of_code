@@ -44,19 +44,19 @@ parseInstructions xs = F (read $ takeWhile isDigit xs):parseInstructions (dropWh
 
 -- Solution Logic
 
-moveStep pos facing (F 0) grid = (pos, facing)
-moveStep pos facing (F i) grid = case M.lookup nextPos grid of
-  Just Floor -> moveStep nextPos facing (F $ i-1) grid
+moveStep pos facing (F 0) wrapping grid = (pos, facing)
+moveStep pos facing (F i) wrapping grid = case M.lookup nextPos grid of
+  Just Floor -> moveStep nextPos facing (F $ i-1) wrapping grid
   Just Wall -> (pos, facing)
   Nothing -> case M.lookup nextPosWrap grid of
-    Just Floor -> moveStep nextPosWrap facing (F $ i-1) grid
+    Just Floor -> moveStep nextPosWrap facing (F $ i-1) wrapping grid
     Just Wall -> (pos, facing)
     Nothing -> error "Wrapped back into Nothing"
   where
     nextPos = posInDir facing pos
-    nextPosWrap = getWrapPos facing pos grid
+    nextPosWrap = wrapping facing pos grid
 
-moveStep pos facing turnDir grid = (pos, turn turnDir facing)
+moveStep pos facing turnDir wrapping grid = (pos, turn turnDir facing)
 
 posInDir U (r, c) = (r-1, c)
 posInDir D (r, c) = (r+1, c)
@@ -70,10 +70,10 @@ turn CW L = U
 turn CCW f = turn CW $ turn CW $ turn CW f
 turn (F _) f = error "Not a turn instruction"
 
-getWrapPos U (r, c) = maximumBy (\x y -> compare (fst x) (fst y)) . filter (\(_, c') -> c == c') . M.keys
-getWrapPos D (r, c) = minimumBy (\x y -> compare (fst x) (fst y)) . filter (\(_, c') -> c == c') . M.keys
-getWrapPos L (r, c) = maximumBy (\x y -> compare (snd x) (snd y)) . filter (\(r', _) -> r == r') . M.keys
-getWrapPos R (r, c) = minimumBy (\x y -> compare (snd x) (snd y)) . filter (\(r', _) -> r == r') . M.keys
+getWrapPos1 U (r, c) = maximumBy (\x y -> compare (fst x) (fst y)) . filter (\(_, c') -> c == c') . M.keys
+getWrapPos1 D (r, c) = minimumBy (\x y -> compare (fst x) (fst y)) . filter (\(_, c') -> c == c') . M.keys
+getWrapPos1 L (r, c) = maximumBy (\x y -> compare (snd x) (snd y)) . filter (\(r', _) -> r == r') . M.keys
+getWrapPos1 R (r, c) = minimumBy (\x y -> compare (snd x) (snd y)) . filter (\(r', _) -> r == r') . M.keys
 
 scoreFacing R = 0
 scoreFacing D = 1
@@ -84,4 +84,4 @@ getInitialPos = minimumBy (\x y -> compare (snd x) (snd y)) . filter (\(r, _) ->
 
 score ((r, c), f) = 1000*r + 4*c + scoreFacing f
 
-part1 (grid, instructions) = score $ foldl (\(pos, facing) instruction -> moveStep pos facing instruction grid) (getInitialPos grid, R) instructions
+part1 (grid, instructions) = score $ foldl (\(pos, facing) instruction -> moveStep pos facing instruction getWrapPos1 grid) (getInitialPos grid, R) instructions
