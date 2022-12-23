@@ -11,9 +11,9 @@ main = do
   args <- getArgs
   let filename = head args
   p1Solution <- solve part1 filename
-  --p2Solution <- solve part2 filename
+  p2Solution <- solve part2 filename
   putStrLn ("Part 1: " ++ show p1Solution)
-  --putStrLn ("Part 2: " ++ show p2Solution)
+  putStrLn ("Part 2: " ++ show p2Solution)
 
 solve fn = fmap fn . getInput
 
@@ -89,9 +89,17 @@ moveStep elves dirs = moveElves elves $ proposeMoves dirs elves
 moveNSteps 0 elves _ = elves
 moveNSteps n elves dirs = moveNSteps (n-1) (moveStep elves $ take 4 dirs) $ drop 1 dirs
 
+findFixPoint n elves dirs
+  | elves == newElves = n
+  | otherwise = findFixPoint (n+1) newElves $ drop 1 dirs
+  where
+    newElves = moveStep elves $ take 4 dirs
+
 part1 :: Elves -> Int
 part1 elves = availableSpaces - length elfPositions
   where
     elfPositions = moveNSteps 10 elves $ cycle considerOrder 
     ((x,y), (x',y')) = containingRect elfPositions
     availableSpaces = (abs (x-x')+1) * (abs (y-y')+1)
+
+part2 elves = findFixPoint 1 elves $ cycle considerOrder
