@@ -108,20 +108,6 @@ bfs to todo
 moveNSteps 0 grid = grid
 moveNSteps n grid = moveNSteps (n - 1) $ moveBlizzards grid
 
-printGrid grid = putStrLn $ unlines $ map (\row -> map (gridChar . flip M.lookup grid) [(row, c) | c <- [0 .. tc + 1]]) [1 .. tr + 1]
-  where
-    ((fr, fc), (tr, tc)) = getGridDimensions grid
-
-gridChar Nothing = '#'
-gridChar (Just []) = '.'
-gridChar (Just [Blizzard (1, 0)]) = 'v'
-gridChar (Just [Blizzard (-1, 0)]) = '^'
-gridChar (Just [Blizzard (0, 1)]) = '>'
-gridChar (Just [Blizzard (0, -1)]) = '<'
-gridChar (Just [Start]) = 'S'
-gridChar (Just [Target]) = 'T'
-gridChar (Just xs) = intToDigit $ length xs
-
 targetPos = fst . head . M.assocs . M.filter (== [Target])
 
 part1 grid = bfs Target $ S.singleton (0, (1, 1), grid)
