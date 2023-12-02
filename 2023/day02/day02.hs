@@ -10,7 +10,7 @@ main = do
   args <- getArgs
   let filename = head args
   p1Solution <- solve part1 getInput1 filename
-  p2Solution <- solve part1 getInput1 filename
+  p2Solution <- solve part2 getInput1 filename
   putStrLn ("Part 1: " ++ show p1Solution)
   putStrLn ("Part 2: " ++ show p2Solution)
 
@@ -47,5 +47,22 @@ trimLeft = dropWhile (== ' ')
 isPossibleGame :: Game -> Bool
 isPossibleGame (Game red green blue) = red < 13 && green < 14 && blue < 15
 
+maxCubes :: [Game] -> (Integer, Integer, Integer)
+maxCubes games = maxCubes' games (0, 0, 0)
+
+maxCubes' :: [Game] -> (Integer, Integer, Integer) -> (Integer, Integer, Integer)
+maxCubes' [] maxs = maxs
+maxCubes' ((Game red green blue) : games) (curRed, curGreen, curBlue) = maxCubes' games (newRed, newGreen, newBlue)
+  where
+    newRed = max red curRed
+    newGreen = max green curGreen
+    newBlue = max blue curBlue
+
+power :: (Integer, Integer, Integer) -> Integer
+power (x, y, z) = x * y * z
+
 part1 :: Games -> Integer
 part1 = sum . M.keys . M.filter (all isPossibleGame)
+
+part2 :: Games -> Integer
+part2 = sum . M.map (power . maxCubes)
