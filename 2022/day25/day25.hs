@@ -17,9 +17,10 @@ solve fn = fmap fn . getInput
 
 -- Input Parsing
 
+data SNAFU = S [Integer] deriving (Show, Eq)
+
 getInput = fmap (map parseLine . lines) . readFile
 
-parseLine :: [Char] -> [Int]
 parseLine = map parseSnafuChar
 
 parseSnafuChar '0' = 0
@@ -31,13 +32,31 @@ parseSnafuChar _ = error "Invalid char"
 
 -- Solution Logic
 
-snafuToDecimal :: [Int] -> Int
+instance Num SNAFU where
+  (+) (S xs) (S ys) = S $ add 0 (reverse xs) (reverse ys)
+    where
+      add carry (x : xs) (y : ys)
+        | x + y == -4 = add (-1) xs ys ++ [1]
+        | x + y == -3 = add (-1) xs ys ++ [2]
+        | x + y == 3 = add 1 xs ys ++ [-2]
+        | x + y == 4 = add 1 xs ys ++ [-1]
+        | otherwise = add 0 xs ys ++ [x + y]
+  (*) = undefined
+  abs x
+    | signum x == S [-1] = negate x
+    | otherwise = x
+  signum (S (x : xs))
+    | x > 0 = S [1]
+    | x == 0 = S [0]
+    | x < 0 = S [-1]
+  fromInteger = S . decimalToSnafu
+  negate (S xs) = S $ map (* (-1)) xs
+
 snafuToDecimal = snafuToDecimal' 0 . reverse
 
 snafuToDecimal' _ [] = 0
 snafuToDecimal' exp (x : xs) = 5 ^ exp * x + snafuToDecimal' (exp + 1) xs
 
-decimalToSnafu :: Int -> [Int]
 decimalToSnafu x = decimalToSnafu' maxExp x
   where
     maxExp = floor $ logBase 5 (fromIntegral x :: Float)
@@ -60,7 +79,6 @@ decimalToSnafu' exp x
     d = round ((fromIntegral x :: Float) / 5 ^ exp)
     m = x - d * 5 ^ exp
 
-encodeSnafu :: [Int] -> [Char]
 encodeSnafu = map snafuChar
 
 snafuChar 1 = '1'
