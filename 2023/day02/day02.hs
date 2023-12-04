@@ -1,7 +1,7 @@
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.List
 import Data.List.Split (splitOn)
-import Data.Map qualified as M
+import qualified Data.Map as M
 import System.Environment
 
 -- IO Scaffolding
