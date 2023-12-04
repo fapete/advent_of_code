@@ -33,10 +33,10 @@ parseLine line = (S.fromList $ map read winning, S.fromList $ map read scratched
 
 -- Solution Logic
 
-cardPoints :: Floating a => (Scratchcard, Integer) -> a
-cardPoints ((winning, scratched), copies)
+cardPoints :: Floating a => Scratchcard -> a
+cardPoints (winning, scratched)
   | numbersInBoth == 0 = 0
-  | otherwise = fromIntegral copies * (2**(fromIntegral numbersInBoth - 1))
+  | otherwise = 2**(fromIntegral numbersInBoth - 1)
   where
     numbersInBoth = S.size (S.intersection winning scratched)
 
@@ -55,6 +55,6 @@ makeCopies ((card, copies):cards) = (card, copies): makeCopies (newCopies ++ rem
     remainingCards = drop (numWins card) cards
 
 
-part1 = sum . map cardPoints . initCopies
+part1 = sum . map cardPoints
 
 part2 = sum . map snd . makeCopies . initCopies
