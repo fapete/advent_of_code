@@ -24,11 +24,14 @@ type Scratchcard = (S.Set Integer, S.Set Integer)
 
 getInput1 = fmap (map parseLine . lines) . readFile
 
+both :: (a -> b) -> (a, a) -> (b, b)
+both f (a, b) = (f a, f b)
+
 parseLine :: String -> Scratchcard
 parseLine line = (S.fromList $ map read winning, S.fromList $ map read scratched)
   where
     numbers = drop 2 $ dropWhile (/= ':') line
-    (winning, scratched) = bimap (filter (/= "") . splitOn " ") (filter (/= "") . splitOn " " . drop 2) $ break (== '|') numbers
+    (winning, scratched) = both (filter (/= "") . splitOn " ") $ second (drop 2) $ break (== '|') numbers
 
 
 -- Solution Logic
