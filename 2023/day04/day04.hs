@@ -34,11 +34,9 @@ parseLine line = (S.fromList $ map read winning, S.fromList $ map read scratched
 -- Solution Logic
 
 cardPoints :: Floating a => Scratchcard -> a
-cardPoints (winning, scratched)
-  | numbersInBoth == 0 = 0
-  | otherwise = 2**(fromIntegral numbersInBoth - 1)
-  where
-    numbersInBoth = S.size (S.intersection winning scratched)
+cardPoints card
+  | numWins card == 0 = 0
+  | otherwise = 2**(fromIntegral (numWins card) - 1)
 
 initCopies :: [Scratchcard] -> [(Scratchcard, Integer)]
 initCopies = map (, 1)
