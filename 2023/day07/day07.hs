@@ -20,15 +20,23 @@ solve solver parser = fmap solver . parser
 
 -- Input Parsing
 
-data Card = Num Int | Jack | Queen | King | Ace deriving (Show, Eq, Ord)
-newtype Hand = Hand [Card] deriving (Show, Eq)
+data Card = Joker | Num Int | Jack | Queen | King | Ace deriving (Show, Eq, Ord)
 data HandType = HighCard | Pair | TwoPairs | ThreeOfAKind | FullHouse | FourOfAKind | FiveOfAKind deriving (Show, Eq, Ord)
-type Game = (Hand, Integer)
 
+newtype Hand = Hand [Card] deriving (Show, Eq)
+
+type Game = (Hand, Integer)
 type CardCounts = M.Map Card Int
 
 getInput1 :: FilePath -> IO [Game]
 getInput1 = fmap (map (bimap parseHand (read . drop 1) . break (== ' ')) . lines) . readFile
+
+getInput2 :: FilePath -> IO [Game]
+getInput2 = fmap (map (bimap (parseHand . map jackToJoker) (read . drop 1) . break (== ' ')) . lines) . readFile
+
+jackToJoker :: Char -> Char
+jackToJoker 'J' = '*'
+jackToJoker x = x
 
 parseHand :: String -> Hand
 parseHand = Hand . map (\x -> read [x])
@@ -43,36 +51,47 @@ instance Read Card where
       'Q' -> (Queen, xs):readsPrec d xs
       'J' -> (Jack, xs):readsPrec d xs
       'T' -> (Num 10, xs):readsPrec d xs
+      '*' -> (Joker, xs):readsPrec d xs
       _ -> error "No Parse"
-
-getInput2 = getInput1
 
 -- Solution Logic
 
 isFiveOfAKind :: CardCounts -> Bool
-isFiveOfAKind = elem 5 . M.elems
+isFiveOfAKind counts = elem 5 (M.elems counts) || hasWithJoker counts
+  where
+    hasWithJoker counts = M.findWithDefault 0 Joker counts + maximum (M.elems $ countsWithoutJoker counts) == 5
 
 isFourOfAKind :: CardCounts -> Bool
-isFourOfAKind = elem 4 . M.elems
+isFourOfAKind counts = not (isFiveOfAKind counts) && (elem 4 (M.elems counts) || hasWithJoker counts)
+  where
+    hasWithJoker counts = M.findWithDefault 0 Joker counts + maximum (M.elems $ countsWithoutJoker counts) == 4
 
 isFullHouse :: CardCounts -> Bool
-isFullHouse counts = [2,3] == sort (M.elems counts)
+isFullHouse counts = not (isFiveOfAKind counts || isFourOfAKind counts) && ([2,3] == sort (M.elems counts) || hasWithJoker counts)
+  where
+    hasWithJoker counts = M.findWithDefault 0 Joker counts == 1 && [2, 2] == M.elems (countsWithoutJoker counts)
 
 isThreeOfAKind :: CardCounts -> Bool
-isThreeOfAKind counts = not (isFullHouse counts) && elem 3 (M.elems counts)
+isThreeOfAKind counts = not (isFiveOfAKind counts || isFourOfAKind counts || isFullHouse counts) && (elem 3 (M.elems counts) || hasWithJoker counts)
+  where
+    hasWithJoker counts = M.findWithDefault 0 Joker counts + maximum (M.elems $ countsWithoutJoker counts) == 3
 
 isTwoPairs :: CardCounts -> Bool
-isTwoPairs counts = [1,2,2] == sort (M.elems counts)
+isTwoPairs counts = not (isFiveOfAKind counts || isFourOfAKind counts || isFullHouse counts || isThreeOfAKind counts) && [1,2,2] == sort (M.elems counts)
+-- Can't have two pairs with hands involving jokers. Once a joker is added you always have either one pair or at least three of a kind
 
 isOnePair :: CardCounts -> Bool
-isOnePair counts = [1,1,1,2] == sort (M.elems counts)
+isOnePair counts = not (isFiveOfAKind counts || isFourOfAKind counts || isFullHouse counts || isThreeOfAKind counts || isTwoPairs counts)
+  && ([1,1,1,2] == sort (M.elems counts) || hasWithJoker counts)
+  where
+    hasWithJoker counts = M.findWithDefault 0 Joker counts == 1 -- high card with a joker. Every other case is a better hand type.
 
 isHighCard :: CardCounts -> Bool
 isHighCard counts = not (
   isOnePair counts ||
   isTwoPairs counts ||
-  isThreeOfAKind counts ||
   isFullHouse counts ||
+  isThreeOfAKind counts ||
   isFourOfAKind counts ||
   isFiveOfAKind counts
   )
@@ -91,6 +110,8 @@ getHandType (Hand h)
 
 countCards :: [Card] -> CardCounts
 countCards = foldr (\card -> M.insertWith (+) card 1) M.empty
+
+countsWithoutJoker = M.delete Joker
 
 instance Ord Hand where
   compare :: Hand -> Hand -> Ordering
