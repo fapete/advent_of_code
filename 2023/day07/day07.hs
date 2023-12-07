@@ -111,6 +111,7 @@ getHandType (Hand h)
 countCards :: [Card] -> CardCounts
 countCards = foldr (\card -> M.insertWith (+) card 1) M.empty
 
+countsWithoutJoker :: CardCounts -> CardCounts
 countsWithoutJoker = M.delete Joker
 
 instance Ord Hand where
