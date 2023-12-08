@@ -9,8 +9,8 @@ haupt = do
   let dateiname = kopf argumente
   teil1Lösung <- löse teil1 holeEingabe dateiname
   teil2Lösung <- löse teil2 holeEingabe dateiname
-  druckeZeile ("Part 1: " ++ zeige teil1Lösung)
-  druckeZeile ("Part 2: " ++ zeige teil2Lösung)
+  druckeZeile ("Lösung Teil 1: " ++ zeige teil1Lösung)
+  druckeZeile ("Lösung Teil 2: " ++ zeige teil2Lösung)
 
 löse löser eingabeLeser = funktorAnwendung löser . eingabeLeser
 
