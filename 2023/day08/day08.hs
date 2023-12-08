@@ -16,12 +16,29 @@ solve solver parser = fmap solver . parser
 
 -- Input Parsing
 
-getInput1 = fmap (lines) . readFile
+type Node = String
+type Map = M.Map Node (Node, Node)
+type Instruction = (Node, Node) -> Node
+
+getInput1 = fmap ((\ls -> (parseInstructions $ head ls, M.fromList $ map parseNode $ drop 2 ls)) . lines) . readFile
 
 getInput2 = getInput1
 
+parseInstructions :: String -> [Instruction]
+parseInstructions "" = []
+parseInstructions ('R':remaining) = snd:parseInstructions remaining
+parseInstructions ('L':remaining) = fst:parseInstructions remaining
+parseInstructions _ = error "Invalid input"
+
+parseNode :: String -> (Node, (Node, Node))
+parseNode (a:b:c:' ':'=':' ':'(':d:e:f:',':' ':x:y:z:')':_) = ([a,b,c], ([d,e,f], [x,y,z]))
+parseNode _ = error "Not a node description"
+
 -- Solution Logic
 
-part1 xs = 4
+follow :: (Node, [Instruction], Map) -> (Node, [Instruction], Map)
+follow (start, instructions, map) = (head instructions $ map M.! start, tail instructions, map)
+
+part1 (instructions, map) = length $ takeWhile (\(node, _, _) -> node /= "ZZZ") $ iterate follow ("AAA", cycle instructions, map)
 
 part2 = part1
