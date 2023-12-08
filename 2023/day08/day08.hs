@@ -49,4 +49,6 @@ part1 (instructions, targets) = length
   $ takeWhile (\(node, _, _) -> node /= "ZZZ") 
   $ iterate follow ("AAA", cycle instructions, targets)
 
-part2 (instructions, targets) = foldl1 lcm $ map (\node -> cycleLength (node, cycle instructions, targets)) $ ghostInitialNodes targets
+part2 (instructions, targets) = foldl1 lcm 
+  $ map (\node -> cycleLength (node, cycle instructions, targets)) 
+  $ ghostInitialNodes targets
