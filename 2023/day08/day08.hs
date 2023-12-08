@@ -37,8 +37,16 @@ parseNode _ = error "Not a node description"
 -- Solution Logic
 
 follow :: (Node, [Instruction], Map) -> (Node, [Instruction], Map)
-follow (start, instructions, map) = (head instructions $ map M.! start, tail instructions, map)
+follow (start, instructions, targets) = (head instructions $ targets M.! start, tail instructions, targets)
 
-part1 (instructions, map) = length $ takeWhile (\(node, _, _) -> node /= "ZZZ") $ iterate follow ("AAA", cycle instructions, map)
+ghostInitialNodes :: Map -> [Node]
+ghostInitialNodes targets = filter ((==) 'A' . last) $ M.keys targets
 
-part2 = part1
+cycleLength :: (Node, [Instruction], Map) -> Int
+cycleLength = length . takeWhile (\(node, _, _) -> last node /= 'Z') . iterate follow
+
+part1 (instructions, targets) = length 
+  $ takeWhile (\(node, _, _) -> node /= "ZZZ") 
+  $ iterate follow ("AAA", cycle instructions, targets)
+
+part2 (instructions, targets) = foldl1 lcm $ map (\node -> cycleLength (node, cycle instructions, targets)) $ ghostInitialNodes targets
