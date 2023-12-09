@@ -34,6 +34,9 @@ computeAllDifferences = takeWhile (any (/= 0)) . iterate differences
 predictNextNumber :: [[Integer]] -> Integer
 predictNextNumber = sum . map head
 
+predictPreviousNumber :: [[Integer]] -> Integer
+predictPreviousNumber = foldr1 (-) . map last
+
 part1 = sum . map (predictNextNumber . computeAllDifferences)
 
-part2 = part1
+part2 = sum . map (predictPreviousNumber . computeAllDifferences)
