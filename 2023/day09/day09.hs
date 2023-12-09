@@ -1,4 +1,5 @@
 import Data.List
+import Data.List.Split (splitOn)
 import System.Environment
 
 -- IO Scaffolding
@@ -15,12 +16,24 @@ solve solver parser = fmap solver . parser
 
 -- Input Parsing
 
-getInput1 = fmap (lines) . readFile
+getInput1 = fmap (map (reverse . parseLine) . lines) . readFile
+
+parseLine :: String -> [Integer]
+parseLine = map read . splitOn " "
 
 getInput2 = getInput1
 
 -- Solution Logic
 
-part1 xs = 4
+differences :: [Integer] -> [Integer]
+differences is = zipWith (-) (init is) (tail is)
+
+computeAllDifferences :: [Integer] -> [[Integer]]
+computeAllDifferences = takeWhile (any (/= 0)) . iterate differences
+
+predictNextNumber :: [[Integer]] -> Integer
+predictNextNumber = sum . map head
+
+part1 = sum . map (predictNextNumber . computeAllDifferences)
 
 part2 = part1
