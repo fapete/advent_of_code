@@ -47,25 +47,41 @@ getBound = flip (-) 1 . length
 equalRows :: Map -> (Int, Int) -> Bool
 equalRows m (x,y) = m!!x == m!!y
 
+hasOneDifference :: Map -> (Int, Int) -> Bool
+hasOneDifference m (x,y) = (== 1) $ length $ filter (uncurry (/=)) $ zip (m!!x) (m!!y)
+
 candidates :: Map -> [(Int, Int)]
 candidates m = filter (equalRows m) $ pairs $ getBound m
+
+smudgedCandidates :: Map -> [(Int, Int)]
+smudgedCandidates m = filter (\pair -> hasOneDifference m pair || equalRows m pair) $ pairs $ getBound m
 
 checkCandidate :: Map -> (Int, Int) -> Bool
 checkCandidate m (x,y)
   | x < 0 || y > getBound m = True
   | otherwise = equalRows m (x,y) && checkCandidate m (x - 1, y + 1)
 
+checkCandidateSmudged :: Map -> (Int, Int) -> Bool
+checkCandidateSmudged m (x,y)
+  | x < 0 || y > getBound m = False
+  | otherwise = equalRows m (x,y) && checkCandidateSmudged m (x - 1, y + 1) || hasOneDifference m (x,y) && checkCandidate m (x - 1, y + 1)
+
 findReflection :: Map -> Maybe (Int, Int)
 findReflection m = if null reflection then Nothing else Just $ head reflection
   where
     reflection = filter (checkCandidate m) $ candidates m
 
-scoreReflection :: Map -> Int
-scoreReflection m = vertical + horizontal
+findSmudgedReflection :: Map -> Maybe (Int, Int)
+findSmudgedReflection m = if null reflection then Nothing else Just $ head reflection
   where
-    vertical = 100 * maybe 0 ((1 +) . fst) (findReflection m)
-    horizontal = maybe 0 ((1 +) . fst) (findReflection $ transpose m)
+    reflection = filter (checkCandidateSmudged m) $ smudgedCandidates m
 
-part1 = sum . map scoreReflection
+scoreReflection :: (Map -> Maybe (Int, Int)) -> Map -> Int
+scoreReflection reflectionFinder m = vertical + horizontal
+  where
+    vertical = 100 * maybe 0 ((1 +) . fst) (reflectionFinder m)
+    horizontal = maybe 0 ((1 +) . fst) (reflectionFinder $ transpose m)
 
-part2 = part1
+part1 = sum . map (scoreReflection findReflection)
+
+part2 = sum . map (scoreReflection findSmudgedReflection)
