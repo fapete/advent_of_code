@@ -30,8 +30,6 @@ data Beam = Beam Position Direction deriving (Show, Eq, Ord)
 
 type Position = (Int, Int)
 
-type BeamPosition = (Position, Direction)
-
 type Grid = M.Map Position Tile
 
 getInput1 :: FilePath -> IO Grid
@@ -131,13 +129,3 @@ startBeams grid =
     (xMax, yMax) = gridBounds grid
 
 part2 grid = maximum $ map (`illuminates` grid) $ startBeams grid
-
-printMap :: Grid -> IO ()
-printMap grid = putStrLn $ unlines (transpose $ chunksOf 10 $ map tileToChar $ M.elems grid)
-
-tileToChar :: Tile -> Char
-tileToChar Empty = '.'
-tileToChar (Splitter Hor) = '-'
-tileToChar (Splitter Vert) = '|'
-tileToChar (Mirror LURD) = '/'
-tileToChar (Mirror LDRU) = '\\'
