@@ -1,9 +1,8 @@
 import Data.List
 import Data.List.Split (chunksOf)
-import Data.Map qualified as M
-import Data.Set qualified as S
+import qualified Data.Map as M
+import qualified Data.Set as S
 import System.Environment
-import System.Posix (GroupEntry (groupID))
 
 -- IO Scaffolding
 
@@ -19,7 +18,7 @@ solve solver parser = fmap solver . parser
 
 -- Input Parsing
 
-data Direction = L | R | U | D deriving (Show)
+data Direction = L | R | U | D deriving (Show, Eq, Ord)
 
 data Splits = Vert | Hor deriving (Show)
 
@@ -27,17 +26,19 @@ data Mirrors = LURD | LDRU deriving (Show)
 
 data Tile = Empty | Splitter Splits | Mirror Mirrors deriving (Show)
 
-data Beam = Beam [Position] Direction | Finished [Position] deriving (Show)
+data Beam = Beam Position Direction deriving (Show, Eq, Ord)
 
 type Position = (Int, Int)
+
+type BeamPosition = (Position, Direction)
 
 type Grid = M.Map Position Tile
 
 getInput1 :: FilePath -> IO Grid
-getInput1 = fmap (M.fromList . concat . zipWith (\y line -> parseLine y line) [1 ..] . lines) . readFile
+getInput1 = fmap (M.fromList . concat . zipWith parseLine [1 ..] . lines) . readFile
 
 parseLine :: Int -> String -> [(Position, Tile)]
-parseLine y line = zipWith (\x char -> ((x, y), parseTile char)) [1 ..] line
+parseLine y = zipWith (\x char -> ((x, y), parseTile char)) [1 ..]
 
 parseTile :: Char -> Tile
 parseTile '.' = Empty
@@ -45,6 +46,7 @@ parseTile '-' = Splitter Hor
 parseTile '|' = Splitter Vert
 parseTile '/' = Mirror LURD
 parseTile '\\' = Mirror LDRU
+parseTile _ = error "Not a tile"
 
 getInput2 = getInput1
 
@@ -80,41 +82,36 @@ split L _ = [L]
 split R _ = [R]
 
 reflect :: Direction -> Mirrors -> [Direction]
-reflect L LDRU = [D]
-reflect U LDRU = [R]
-reflect R LDRU = [U]
-reflect D LDRU = [L]
-reflect L LURD = [U]
-reflect U LURD = [L]
-reflect R LURD = [D]
-reflect D LURD = [R]
+reflect L LDRU = [U]
+reflect U LDRU = [L]
+reflect R LDRU = [D]
+reflect D LDRU = [R]
+reflect L LURD = [D]
+reflect U LURD = [R]
+reflect R LURD = [U]
+reflect D LURD = [L]
 
 advanceBeam :: Beam -> Grid -> [Beam]
-advanceBeam (Beam (pos : prev) dir) grid
-  | M.notMember nextPos grid = [Finished (pos : prev)]
-  | otherwise = map (Beam (nextPos : pos : prev)) nextDirs
+advanceBeam (Beam pos dir) grid
+  | M.notMember pos grid = []
+  | otherwise = zipWith Beam nextPos nextDirs
   where
-    nextPos = move pos dir
-    nextDirs = applyTile nextPos dir grid
-advanceBeam (Finished pos) grid = [Finished pos]
+    nextDirs = applyTile pos dir grid
+    nextPos = map (move pos) nextDirs
 
-isFinished :: Beam -> Bool
-isFinished (Finished _) = True
-isFinished _ = False
+beamPosition :: Beam -> Position
+beamPosition (Beam pos _) = pos
 
-getPositions :: Beam -> [Position]
-getPositions (Beam pos _) = pos
-getPositions (Finished pos) = pos
+getPositions :: Grid -> S.Set Beam -> S.Set Position
+getPositions grid = S.filter (`M.member` grid) . S.map beamPosition
 
-advanceBeams :: [Beam] -> Grid -> [Beam]
-advanceBeams beams grid
-  | all isFinished beams = beams
-  | otherwise = advanceBeams (concatMap (`advanceBeam` grid) beams) grid
+advanceBeams :: [Beam] -> S.Set Beam -> Grid -> S.Set Beam
+advanceBeams [] positions _ = positions
+advanceBeams beams positions grid = advanceBeams newBeams (foldr S.insert positions beams) grid
+  where
+    newBeams = filter (`S.notMember` positions) (concatMap (`advanceBeam` grid) beams)
 
-illuminatedPositions :: [Beam] -> S.Set Position
-illuminatedPositions = S.fromList . concatMap getPositions
-
-part1 = length . illuminatedPositions . advanceBeams [Beam [(1, 1)] R]
+part1 grid = length $ getPositions grid $ advanceBeams [Beam (1,1) R] S.empty grid
 
 part2 = part1
 
