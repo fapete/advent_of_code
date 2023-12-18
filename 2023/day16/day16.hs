@@ -111,9 +111,26 @@ advanceBeams beams positions grid = advanceBeams newBeams (foldr S.insert positi
   where
     newBeams = filter (`S.notMember` positions) (concatMap (`advanceBeam` grid) beams)
 
-part1 grid = length $ getPositions grid $ advanceBeams [Beam (1,1) R] S.empty grid
+illuminates :: Beam -> Grid -> Int
+illuminates beam grid = length $ getPositions grid $ advanceBeams [beam] S.empty grid
 
-part2 = part1
+part1 = illuminates (Beam (1,1) R)
+
+both :: (a -> b) -> (a, a) -> (b, b)
+both f (x,y) = (f x, f y)
+
+gridBounds :: Grid -> (Int, Int)
+gridBounds = both maximum . unzip . M.keys
+
+startBeams grid =
+  [Beam (1,x) R | x <- [1..yMax]] ++
+  [Beam (x,1) D | x <- [1..xMax]] ++
+  [Beam (xMax,x) L | x <- [1..yMax]] ++
+  [Beam (x,yMax) U | x <- [1..xMax]]
+  where
+    (xMax, yMax) = gridBounds grid
+
+part2 grid = maximum $ map (`illuminates` grid) $ startBeams grid
 
 printMap :: Grid -> IO ()
 printMap grid = putStrLn $ unlines (transpose $ chunksOf 10 $ map tileToChar $ M.elems grid)
