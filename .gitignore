@@ -24,6 +24,9 @@
 # Personalized puzzle input files
 **/input
 
+# C++ default binary
+**/a.out
+
 **/.DS_Store
 **/*.un~
 **/*.swp
