@@ -27,6 +27,8 @@
 # C++ default binary
 **/a.out
 
+**/.vscode/*
+
 **/.DS_Store
 **/*.un~
 **/*.swp
