@@ -236,7 +236,7 @@ namespace grid {
             return dfs(startPos, target, {}, seen, is_valid_position, find_all_paths);
         }
 
-    protected:
+    private:
         std::vector<std::vector<Position>> dfs(Position from, const TileType& target, std::vector<Position> currentPath, std::set<Position>& seen, PositionFilter is_valid_Position, bool find_all_paths) const {
             seen.insert(from);
             std::vector<std::vector<Position>> result;
