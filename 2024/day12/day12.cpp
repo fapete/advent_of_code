@@ -14,7 +14,7 @@ Grid<char> parse_input(std::string fileName) {
     return Grid<char>::from(file, [](char c) {return c;});
 }
 
-std::vector<std::set<Position>> get_areas(Grid<char>& map) {
+std::vector<std::set<Position>> get_areas(const Grid<char>& map) {
     std::vector<std::set<Position>> areas;
 
     for (auto it = map.begin(); it != map.end(); it++) {

@@ -125,7 +125,11 @@ namespace grid {
         }
 
     public:
-        Position to_grid_position(typename std::vector<TileType>::iterator it) const {
+        Position to_grid_position(typename std::vector<TileType>::iterator it) {
+            return to_grid_position(it - ts.begin());
+        }
+
+        Position to_grid_position(typename std::vector<TileType>::const_iterator it) const {
             return to_grid_position(it - ts.begin());
         }
 
@@ -220,7 +224,7 @@ namespace grid {
             return neighbors;
         }
 
-        std::set<Position> bfs(typename std::vector<TileType>::iterator start, const TileType& target, PositionFilter is_valid_position = [](const Position&, const Position&) {return true;}) const {
+        std::set<Position> bfs(typename std::vector<TileType>::const_iterator start, const TileType& target, PositionFilter is_valid_position = [](const Position&, const Position&) {return true;}) const {
             Position startPos = to_grid_position(start);
 
             std::unordered_set<Position, pair_hash> seen;
@@ -282,7 +286,15 @@ namespace grid {
             return ts.begin();
         }
 
+        typename std::vector<TileType>::const_iterator begin() const {
+            return ts.begin();
+        }
+
         typename std::vector<TileType>::iterator end() {
+            return ts.end();
+        }
+
+        typename std::vector<TileType>::const_iterator end() const {
             return ts.end();
         }
     };
