@@ -185,26 +185,32 @@ namespace grid {
             *it = tile;
         }
 
+        Position get_position_in_direction(const Position& pos, const Direction dir) const {
+            Position newPos = pos;
+            switch (dir) {
+                case UP:
+                    newPos.second--;
+                    break;
+                case DOWN:
+                    newPos.second++;
+                    break;
+                case LEFT:
+                    newPos.first--;
+                    break;
+                case RIGHT:
+                    newPos.first++;
+                    break;
+            }
+
+            return newPos;
+        }
+
         std::vector<Position> neighbors(const Position& p) const {
             std::vector<Position> neighbors;
             Direction dirs[] = {UP, DOWN, LEFT, RIGHT};
 
             for (auto dir: dirs) {
-                Position neighbor = p;
-                switch (dir) {
-                    case UP:
-                        neighbor.second--;
-                        break;
-                    case DOWN:
-                        neighbor.second++;
-                        break;
-                    case LEFT:
-                        neighbor.first--;
-                        break;
-                    case RIGHT:
-                        neighbor.first++;
-                        break;
-                }
+                Position neighbor = get_position_in_direction(p, dir);
 
                 if (is_in_bounds(neighbor)) {
                     neighbors.push_back(neighbor);

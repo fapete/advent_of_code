@@ -48,9 +48,61 @@ long perimeter(const Grid<char>& map, const std::set<Position>& area) {
     return p;
 }
 
+bool is_outer_corner(const Grid<char>& map, const Position& pos, const Position& adjacent1, const Position& adjacent2) {
+    return (!map.is_in_bounds(adjacent1) || map.at(adjacent1) != map.at(pos)) && (!map.is_in_bounds(adjacent2) || map.at(adjacent2) != map.at(pos));
+}
+
+bool is_inner_corner(const Grid<char>& map, const Position& pos, const Position& adjacent1, const Position& adjacent2, const Position& diag) {
+    return (map.is_in_bounds(adjacent1) && map.is_in_bounds(adjacent2) && map.is_in_bounds(diag)) && 
+        (map.at(adjacent1) != map.at(pos) && map.at(adjacent2) == map.at(pos) && map.at(diag) == map.at(pos));
+}
+
+long count_corners(const Grid<char>& map, const Position& pos) {
+    long count{0};
+
+    // Outer Corners
+    Position above = map.get_position_in_direction(pos, UP);
+    Position left = map.get_position_in_direction(pos, LEFT);
+    Position below = map.get_position_in_direction(pos, DOWN);
+    Position right = map.get_position_in_direction(pos, RIGHT);
+
+    if (is_outer_corner(map, pos, above, left)) count++;
+    if (is_outer_corner(map, pos, above, right)) count++;
+    if (is_outer_corner(map, pos, below, left)) count++;
+    if (is_outer_corner(map, pos, below, right)) count++;
+
+    // Inner Corners
+    Position above_left = map.get_position_in_direction(above, LEFT);
+    Position above_right = map.get_position_in_direction(above, RIGHT);
+    Position below_left = map.get_position_in_direction(below, LEFT);
+    Position below_right = map.get_position_in_direction(below, RIGHT);
+
+    if (is_inner_corner(map, pos, right, above, above_right)) count++;
+    if (is_inner_corner(map, pos, left, above, above_left)) count++;
+    if (is_inner_corner(map, pos, right, below, below_right)) count++;
+    if (is_inner_corner(map, pos, left, below, below_left)) count++;
+
+    return count;
+}
+
+long count_all_corners(const Grid<char>& map, const std::set<Position>& area) {
+    long count{0};
+
+    for (const Position& pos: area) {
+        count += count_corners(map, pos);
+    }
+
+    return count;
+}
+
 long part1(Grid<char>& map) {
     std::vector<std::set<Position>> areas = get_areas(map);
     return std::accumulate(areas.begin(), areas.end(), 0, [&map](long acc, const std::set<Position>& plot) {return acc + area(plot) * perimeter(map, plot);});
+}
+
+long part2(Grid<char>& map) {
+    std::vector<std::set<Position>> areas = get_areas(map);
+    return std::accumulate(areas.begin(), areas.end(), 0, [&map](long acc, const std::set<Position>& plot) {return acc + area(plot) * count_all_corners(map, plot);});
 }
 
 int main() {
@@ -60,4 +112,8 @@ int main() {
     Grid<char> map = parse_input(fileName);
     long p1 = part1(map);
     std::cout << "Part 1: " << p1 << std::endl;
+    long p2 = part2(map);
+    std::cout << "Part 2: " << p2 << std::endl;
+
+    return 0;
 }
