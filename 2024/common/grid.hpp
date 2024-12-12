@@ -1,5 +1,6 @@
 #include <iostream>
 #include <set>
+#include <unordered_set>
 #include <vector>
 #include <deque>
 #include <string>
@@ -97,6 +98,12 @@ namespace grid {
         return os;
     }
 
+    struct pair_hash {
+        inline std::size_t operator()(const std::pair<int,int> & v) const {
+            return v.first*31+v.second;
+        }
+    };
+
     template<typename TileType>
     struct Grid {
         using TileParse = TileType(*)(char);
@@ -110,10 +117,6 @@ namespace grid {
             return {index % c, index / c};
         }
 
-        Position to_grid_position(typename std::vector<TileType>::iterator it) const {
-            return to_grid_position(it - ts.begin());
-        }
-
         size_t from_grid_position(const Position& pos) const {
             int row = pos.second;
             int col = pos.first;
@@ -122,6 +125,10 @@ namespace grid {
         }
 
     public:
+        Position to_grid_position(typename std::vector<TileType>::iterator it) const {
+            return to_grid_position(it - ts.begin());
+        }
+
         Grid(const std::vector<TileType>& tiles, int rows, int cols): ts{tiles}, r{rows}, c{cols} {
         }
 
@@ -210,17 +217,18 @@ namespace grid {
         std::set<Position> bfs(typename std::vector<TileType>::iterator start, const TileType& target, PositionFilter is_valid_position = [](const Position&, const Position&) {return true;}) const {
             Position startPos = to_grid_position(start);
 
-            std::set<Position> seen;
+            std::unordered_set<Position, pair_hash> seen;
             std::set<Position> result;
             std::deque<Position> queue{startPos};
 
             while (!queue.empty()) {
                 Position current = queue.front();
                 queue.pop_front();
-                seen.insert(current);
+
                 if (at(current) == target) result.insert(current);
                 for (auto& neighbor: neighbors(current)) {
                     if (seen.find(neighbor) == seen.end() && is_valid_position(current, neighbor)) {
+                        seen.insert(neighbor);
                         queue.push_back(neighbor);
                     }
                 }
@@ -271,7 +279,6 @@ namespace grid {
         typename std::vector<TileType>::iterator end() {
             return ts.end();
         }
-
     };
 
     template <typename TileType, typename ActorType>
