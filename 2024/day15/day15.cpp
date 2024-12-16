@@ -233,12 +233,8 @@ void enlarged_simulate_move(ActorGrid<WarehouseTiles, WarehouseActor>& grid, War
 long part1(ActorGrid<WarehouseTiles, WarehouseActor>& grid, const std::vector<Direction>& directions) {
     WarehouseActor* robot = &*grid.find_actor_by([](WarehouseActor& actor) {return actor.type == ROBOT;});
 
-    //std::cout << "Initial state" << std::endl;
-    //print_actor_grid(grid);
     for (auto dir: directions) {
         simulate_move(grid, robot, dir);
-        //std::cout << "State after move " << dir << std::endl;
-        //print_actor_grid(grid);
     }
 
     long sum{0};
@@ -254,12 +250,8 @@ long part1(ActorGrid<WarehouseTiles, WarehouseActor>& grid, const std::vector<Di
 long part2(ActorGrid<WarehouseTiles, WarehouseActor>& grid, const std::vector<Direction>& directions) {
     WarehouseActor* robot = &*grid.find_actor_by([](WarehouseActor& actor) {return actor.type == ROBOT;});
 
-    //std::cout << "Initial state" << std::endl;
-    //print_actor_grid(grid);
     for (auto dir: directions) {
         enlarged_simulate_move(grid, robot, dir);
-        //std::cout << "State after move " << dir << std::endl;
-        //print_actor_grid(grid);
     }
 
     long sum{0};
