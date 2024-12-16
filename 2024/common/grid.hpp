@@ -14,25 +14,61 @@ namespace grid {
 
     enum Direction {UP, DOWN, LEFT, RIGHT};
 
+    std::ostream& operator<<(std::ostream& os, const Position& pos) {
+        os << "(" << pos.first << ", " << pos.second << ")";
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const Direction& dir) {
+        switch (dir) {
+            case UP:
+                os << "UP";
+                break;
+            case DOWN:
+                os << "DOWN";
+                break;
+            case LEFT:
+                os << "LEFT";
+                break;
+            case RIGHT:
+                os << "RIGHT";
+                break;
+        }
+
+        return os;
+    }
+
+    Position pos_in_dir(const Position& pos, const Direction dir) {
+        Position new_pos = pos;
+        switch (dir) {
+            case UP:
+                new_pos.second--;
+                break;
+            case DOWN:
+                new_pos.second++;
+                break;
+            case LEFT:
+                new_pos.first--;
+                break;
+            case RIGHT:
+                new_pos.first++;
+                break;
+        }
+
+        return new_pos;
+    }
+
     struct GridActor {
         Position pos;
         Direction dir;
 
         void move() {
-            switch (dir) {
-                case UP:
-                    pos.second--;
-                    break;
-                case DOWN:
-                    pos.second++;
-                    break;
-                case LEFT:
-                    pos.first--;
-                    break;
-                case RIGHT:
-                    pos.first++;
-                    break;
-            }
+            pos = pos_in_dir(pos, dir);
+        }
+
+        void move(Direction dir) {
+            this->dir = dir;
+            move();
         }
 
         void reverse_move() {
@@ -68,30 +104,6 @@ namespace grid {
 
         friend std::ostream& operator<<(std::ostream& os, const GridActor actor);
     };
-
-    std::ostream& operator<<(std::ostream& os, const Position& pos) {
-        os << "(" << pos.first << ", " << pos.second << ")";
-        return os;
-    }
-
-    std::ostream& operator<<(std::ostream& os, const Direction& dir) {
-        switch (dir) {
-            case UP:
-                os << "UP";
-                break;
-            case DOWN:
-                os << "DOWN";
-                break;
-            case LEFT:
-                os << "LEFT";
-                break;
-            case RIGHT:
-                os << "RIGHT";
-                break;
-        }
-
-        return os;
-    }
 
     std::ostream& operator<<(std::ostream& os, const GridActor actor) {
         os << "Actor at " << actor.pos << " facing " << actor.dir;
@@ -189,32 +201,12 @@ namespace grid {
             *it = tile;
         }
 
-        Position get_position_in_direction(const Position& pos, const Direction dir) const {
-            Position newPos = pos;
-            switch (dir) {
-                case UP:
-                    newPos.second--;
-                    break;
-                case DOWN:
-                    newPos.second++;
-                    break;
-                case LEFT:
-                    newPos.first--;
-                    break;
-                case RIGHT:
-                    newPos.first++;
-                    break;
-            }
-
-            return newPos;
-        }
-
         std::vector<Position> neighbors(const Position& p) const {
             std::vector<Position> neighbors;
             Direction dirs[] = {UP, DOWN, LEFT, RIGHT};
 
             for (auto dir: dirs) {
-                Position neighbor = get_position_in_direction(p, dir);
+                Position neighbor = pos_in_dir(p, dir);
 
                 if (is_in_bounds(neighbor)) {
                     neighbors.push_back(neighbor);
@@ -336,7 +328,7 @@ namespace grid {
             }
 
             cols = tiles.size() / rows;
-            return Grid{tiles, actors, rows, cols, actor};
+            return ActorGrid{tiles, actors, rows, cols, actor};
         }
 
         TileType& at(Position pos) {
@@ -351,8 +343,24 @@ namespace grid {
             return as;
         }
 
+        const std::vector<ActorType>& actors() const {
+            return as;
+        }
+
         ActorType& get_actor(size_t index) {
             return as[index];
+        }
+
+        auto get_actor(Position pos) {
+            return std::find_if(as.begin(), as.end(), [pos](ActorType& actor) {return actor.pos == pos;}); 
+        }
+
+        auto get_actor(Position pos) const {
+            return std::find_if(as.begin(), as.end(), [pos](const ActorType& actor) {return actor.pos == pos;}); 
+        }
+
+        auto find_actor_by(std::function<bool(ActorType&)> predicate) {
+            return std::find_if(as.begin(), as.end(), predicate);
         }
 
         // Returns false, if actor faces an obstacle
