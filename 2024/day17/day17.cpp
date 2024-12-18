@@ -71,35 +71,42 @@ struct MiniComputer {
         while (pc < program.size()) {
             program[pc]->exec(*this);
         }
-
-        for (int i: output) {
-            std::cout << i << ",";
-        }
-        std::cout << std::endl;
     }
 
     uint64_t find_initial_register() {
-        uint64_t cur_val{1};
-        while (true) {
-            reset();
-            reg_a = cur_val;
+        std::vector<std::pair<uint64_t, size_t>> candidates{{1, initial_tape.size() - 1}};
+        std::vector<uint64_t> results;
 
-            while (pc < program.size()) {
-                program[pc]->exec(*this);
-                
-                if (output.size() > initial_tape.size() || output.size() > 0 && output.back() != initial_tape[output.size() - 1]) {
-                    // output can't match the initial tape
-                    break;
+        while (!candidates.empty()) {
+            auto [cur_val, looking_for_idx] = candidates.back();
+            candidates.pop_back();
+
+            for (int i = 0; i < 8; i++) {
+                reg_a = cur_val + i;
+
+                reset();
+                run();
+
+                auto desired = initial_tape.rbegin();
+                auto out_it = output.rbegin();
+                for (; out_it != output.rend(); out_it++) {
+                    if (*out_it != *desired) {
+                        break;
+                    }
+                    desired++;
+                }
+
+                if (out_it == output.rend()) {
+                    if (looking_for_idx == 0) {
+                        results.push_back(cur_val + i);
+                    } else {
+                        candidates.push_back({(cur_val + i) << 3, looking_for_idx - 1});
+                    }
                 }
             }
-
-            if (output.size() == initial_tape.size()) {
-                // If we get here, the output matches the inital tape on every position
-                return cur_val;
-            } else {
-                cur_val++;
-            }
         }
+
+        return *std::min_element(results.begin(), results.end());
     }
 
     void print_program() {
@@ -107,6 +114,13 @@ struct MiniComputer {
             i->print();
             std::cout << std::endl;
         }
+    }
+
+    void print_output() {
+        for (int i: output) {
+            std::cout << i << ",";
+        }
+        std::cout << std::endl;
     }
 
     void reset() {
@@ -178,8 +192,6 @@ struct BST: Instruction {
     }
 };
 
-// Both example program and actual input only have a JNZ instruction at the very end, jumping back to the beginning
-// If part 2 messes with the tape, this will need to be reworked, potentially quite significantly
 struct JNZ: Instruction {
     JNZ(int i): Instruction{new LiteralOp{i}} {}
 
@@ -264,7 +276,7 @@ Instruction* parse_instruction(int opcode, int operand) {
 
 MiniComputer parse_input(const std::string& filename) {
     std::ifstream file{filename};
-    long a, b, c;
+    uint64_t a, b, c;
     std::vector<int> tape;
     std::vector<Instruction*> instructions;
 
@@ -306,6 +318,7 @@ int main() {
 
     std::cout << "Part 1: ";
     computer.run();
+    computer.print_output();
 
     std::cout << "Part 2: ";
     long p2 = computer.find_initial_register();
