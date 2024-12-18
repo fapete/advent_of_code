@@ -216,22 +216,27 @@ namespace grid {
             return neighbors;
         }
 
-        std::set<Position> bfs(typename std::vector<TileType>::const_iterator start, const TileType& target, PositionFilter is_valid_position = [](const Position&, const Position&) {return true;}) const {
+        std::set<std::pair<Position, long>> bfs(typename std::vector<TileType>::const_iterator start, const TileType& target, PositionFilter is_valid_position = [](const Position&, const Position&) {return true;}, bool find_shortest_path = false) const {
             Position startPos = to_grid_position(start);
 
-            std::unordered_set<Position, pair_hash> seen;
-            std::set<Position> result;
-            std::deque<Position> queue{startPos};
+            std::unordered_set<Position, pair_hash> seen{startPos};
+            std::set<std::pair<Position, long>> result;
+            std::deque<std::pair<Position, long>> queue{{startPos, 0}};
 
             while (!queue.empty()) {
-                Position current = queue.front();
+                auto [current, steps] = queue.front();
                 queue.pop_front();
 
-                if (at(current) == target) result.insert(current);
+                if (at(current) == target) {
+                    result.insert({current, steps});
+                    if (find_shortest_path) {
+                        break;
+                    }
+                }
                 for (auto& neighbor: neighbors(current)) {
                     if (seen.find(neighbor) == seen.end() && is_valid_position(current, neighbor)) {
                         seen.insert(neighbor);
-                        queue.push_back(neighbor);
+                        queue.push_back({neighbor, steps+1});
                     }
                 }
             }
